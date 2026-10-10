@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Stakeholdermap | Star Wars Xperience</title>
+  <meta name="description" content="Stakeholdermap, plan van aanpak en voortgang van het project Star Wars Xperience, Smart Media Production, Hogeschool van Amsterdam.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#040812">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23070d1c'/%3E%3Cpath d='M8 2.5 2.5 8 8 13.5' fill='none' stroke='%23ffb648' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8 2.5 13.5 8 8 13.5' fill='none' stroke='%2362c6ff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='8' cy='8' r='1.4' fill='%23eaf4ff'/%3E%3C/svg%3E">
+  <style>
+    /* Basis voor het moment dat styles.css en de scripts nog niet geladen zijn,
+       bijvoorbeeld in een voorvertoning die alleen dit ene bestand toont. */
+    html { background: #040812; color-scheme: dark; }
+    body { margin: 0; color: #e8f1fb; font-family: "Saira", "Bahnschrift", "DIN Alternate", "Segoe UI", system-ui, sans-serif; line-height: 1.55; }
+    .page { max-width: 1344px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { margin: 0; font-size: 2rem; line-height: 1.1; color: #eaf4ff; }
+    .masthead__sub { margin: 8px 0 0; font-size: 1.125rem; color: #a9bdd6; }
+    .skip { position: absolute; left: 16px; top: 16px; transform: translateY(-200%); }
+    .skip:focus { transform: none; }
+    dialog:not([open]) { display: none; }
+    .fallback { max-width: 60ch; margin: 24px 0 0; padding: 16px; border: 1px dashed rgba(160, 208, 255, 0.5); border-radius: 8px; color: #a9bdd6; opacity: 0; animation: fallback-in 0.01s 1.5s forwards; }
+    .fallback strong { color: #eaf4ff; }
+    @keyframes fallback-in { to { opacity: 1; } }
+  </style>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-modus="bezoeker">
+  <canvas class="sky" id="sky" aria-hidden="true"></canvas>
+  <div class="sky-lights" id="sky-lights" aria-hidden="true"></div>
+
+  <a class="skip" href="#inhoud">Naar de inhoud</a>
+
+  <div class="page">
+    <header class="masthead" id="masthead">
+      <div class="masthead__title" id="masthead-title">
+        <div class="masthead__words">
+          <h1 id="project-naam">Star Wars Xperience</h1>
+          <p class="masthead__sub" id="project-ondertitel">Stakeholdermap, plan van aanpak en voortgang</p>
+        </div>
+      </div>
+      <dl class="titleblock" id="project-gegevens"></dl>
+    </header>
+
+    <div class="switchbar">
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <p class="switchbar__hint" id="weergave-intro"></p>
+    </div>
+
+    <main id="inhoud" tabindex="-1">
+      <p class="fallback" id="fallback">De stakeholdermap is hier niet geladen. Open <strong>index.html</strong> in een browser om hem te zien. Een voorvertoning zonder scripts toont alleen deze kop.</p>
+
+      <section class="view" id="weergave-kaart" role="tabpanel" aria-labelledby="tab-kaart">
+        <div class="stage" id="stage">
+          <div class="map" id="map"></div>
+          <div class="dock">
+            <dialog class="detail" id="detail" aria-labelledby="detail-naam">
+              <div class="detail__inner">
+                <header class="detail__head">
+                  <div>
+                    <h2 id="detail-naam" tabindex="-1"></h2>
+                    <p class="detail__sub" id="detail-sub"></p>
+                  </div>
+                  <button class="iconbtn" id="detail-sluiten" type="button">
+                    <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </button>
+                </header>
+                <div class="detail__positie" id="detail-positie"></div>
+                <section class="detail__plan" aria-labelledby="detail-plan-titel">
+                  <h3 id="detail-plan-titel"></h3>
+                  <div id="detail-plan"></div>
+                </section>
+                <section class="detail__docs" aria-labelledby="detail-docs-titel">
+                  <h3 id="detail-docs-titel"></h3>
+                  <div id="detail-docs"></div>
+                </section>
+              </div>
+            </dialog>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="weergave-plan" role="tabpanel" aria-labelledby="tab-plan" hidden></section>
+
+      <section class="view" id="weergave-voortgang" role="tabpanel" aria-labelledby="tab-voortgang" hidden>
+        <div class="galaxy" id="galaxy"></div>
+        <div class="planetview" id="planetview" hidden></div>
+      </section>
+    </main>
+
+    <footer class="colophon" id="colophon">
+      <div class="colophon__text">
+        <p id="voettekst"></p>
+      </div>
+    </footer>
+  </div>
+
+  <canvas class="hyperspace" id="hyperspace" aria-hidden="true" hidden></canvas>
+
+  <noscript>
+    <p class="noscript">Deze pagina heeft JavaScript nodig om de stakeholdermap te tonen.</p>
+  </noscript>
+
+  <script src="data.js"></script>
+  <script src="documenten.js"></script>
+  <script src="planeten.js"></script>
+  <script src="voortgang.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

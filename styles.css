@@ -1,0 +1,3029 @@
+/* Stakeholdermap Star Wars Xperience
+   Twee lichten dragen de kaart: amber is invloed, blauw is belang. */
+
+/* Saira staat in de map fonts (SIL Open Font License, zie fonts/OFL.txt). */
+@font-face {
+  font-family: "Saira";
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 50% 125%;
+  font-display: swap;
+  src: url("fonts/saira-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Saira";
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 50% 125%;
+  font-display: swap;
+  src: url("fonts/saira-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Ruimte */
+  --space-deep: #040812;
+  --space: #070d1c;
+  --panel: #0a1426;
+  --plate: rgba(6, 14, 28, 0.76);
+  --plate-hover: rgba(14, 30, 56, 0.9);
+  --plate-lock: rgba(18, 38, 70, 0.95);
+
+  /* Licht */
+  --amber: #ffb648;
+  --amber-rgb: 255, 182, 72;
+  --blue: #62c6ff;
+  --blue-rgb: 98, 198, 255;
+  --ice: #eaf4ff;
+
+  /* Tekst en lijnen */
+  --text: #e8f1fb;
+  --text-2: #a9bdd6;
+  --text-3: #8399b6;
+  --line: rgba(128, 176, 224, 0.26);
+  --line-soft: rgba(128, 176, 224, 0.14);
+  --line-strong: rgba(160, 208, 255, 0.5);
+  --mark-off: rgba(150, 176, 208, 0.5);
+  --grid: rgba(128, 176, 224, 0.1);
+  --surface: rgba(6, 12, 24, 0.95);
+  --danger: #ff9c9c;
+
+  /* Spacing op een basis van 4px */
+  --s-xxs: 4px;
+  --s-xs: 8px;
+  --s-sm: 12px;
+  --s-md: 16px;
+  --s-lg: 20px;
+  --s-xl: 24px;
+  --s-xxl: 32px;
+  --s-xxxl: 40px;
+  --s-section-sm: 48px;
+  --s-section: 64px;
+
+  /* Radii */
+  --r-xs: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xxl: 20px;
+  --r-full: 9999px;
+
+  --font: "Saira", "Bahnschrift", "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --detail-w: 400px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scrollbar-color: rgba(var(--blue-rgb), 0.45) transparent;
+  scrollbar-gutter: stable;
+  background: var(--space-deep);
+}
+
+html.has-sheet {
+  overflow: hidden;
+}
+
+/* De nevel zit in de achtergrond van de body, de sterren liggen er als laag overheen. */
+body {
+  position: relative;
+  isolation: isolate;
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(1200px 720px at 82% -120px, rgba(46, 104, 190, 0.26), transparent 62%) no-repeat,
+    radial-gradient(900px 620px at -12% calc(100% + 80px), rgba(var(--amber-rgb), 0.07), transparent 62%) no-repeat,
+    linear-gradient(180deg, var(--space-deep) 0%, var(--space) 48%, var(--space-deep) 100%);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(var(--blue-rgb), 0.36);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ice);
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3,
+p,
+dl,
+dd,
+ul {
+  margin: 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Sterrenveld */
+.sky {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sky-lights {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sky-lights span {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--ice);
+  box-shadow: 0 0 6px 1px rgba(var(--blue-rgb), 0.55);
+  opacity: 0.85;
+}
+
+.skip {
+  position: absolute;
+  left: var(--s-md);
+  top: var(--s-md);
+  z-index: 10;
+  padding: 10px 18px;
+  border-radius: var(--r-md);
+  background: var(--ice);
+  color: #06101f;
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+.noscript {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--s-xl) var(--s-md);
+  color: var(--text);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Pagina */
+.page {
+  max-width: 1344px;
+  margin-inline: auto;
+  padding: var(--s-xl) var(--s-md) var(--s-section-sm);
+}
+
+/* Kop */
+.masthead {
+  display: grid;
+  gap: var(--s-lg);
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  font-stretch: 118%;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--ice);
+  text-wrap: balance;
+  text-shadow: 0 0 28px rgba(var(--blue-rgb), 0.38);
+}
+
+.masthead__sub {
+  margin-top: var(--s-xs);
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.masthead__title {
+  container-type: inline-size;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-xl);
+  min-width: 0;
+}
+
+.masthead__words {
+  min-width: 0;
+}
+
+/* Titel: het logo vervangt de woorden "Star Wars", de rest is gezet. */
+.lockup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-xs) var(--s-sm);
+}
+
+.lockup__logo {
+  flex: none;
+  width: 3.2em;
+  mix-blend-mode: screen;
+}
+
+/* Een plaatje met uitsnede: het script zet de maat, hier alleen het venster. */
+.crop {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.crop img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  max-width: none;
+  height: auto;
+  opacity: 0;
+}
+
+.crop.is-ready img {
+  opacity: 1;
+}
+
+/* Hologram: een uitgesneden schip in blauw licht, met scanlijnen eroverheen. */
+.holo {
+  flex: none;
+  opacity: 0.94;
+  pointer-events: none;
+  -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgba(0, 0, 0, 0.5) 2px 3px);
+  mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgba(0, 0, 0, 0.5) 2px 3px);
+}
+
+.holo--kop {
+  display: none;
+  width: 216px;
+  margin-bottom: var(--s-xxs);
+}
+
+@container (min-width: 700px) {
+  .holo--kop {
+    display: block;
+  }
+}
+
+.holo--voet {
+  width: 132px;
+}
+
+.titleblock {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s-xxs) var(--s-md);
+  padding-block: var(--s-sm);
+  border-block: 1px solid var(--line-soft);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.titleblock dt {
+  color: var(--text-3);
+}
+
+.titleblock dd {
+  color: var(--text);
+}
+
+/* Schakelaar tussen de weergaven */
+.switchbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-sm) var(--s-xl);
+  margin-top: var(--s-xl);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-xxs);
+}
+
+/* Op een smal scherm staan de drie tabs in de smalle snede van Saira, zodat ze op één rij passen. */
+.tab {
+  appearance: none;
+  min-height: 44px;
+  padding: var(--s-xs);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-stretch: 88%;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s, background-color 0.18s;
+}
+
+.tab:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.tab[aria-selected="true"],
+.tab[aria-selected="true"]:hover {
+  border-color: var(--ice);
+  background: var(--ice);
+  color: #06101f;
+  box-shadow: 0 8px 24px -10px rgba(var(--blue-rgb), 0.7);
+}
+
+.switchbar__hint {
+  max-width: 60ch;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+main {
+  margin-top: var(--s-lg);
+  outline: none;
+}
+
+.view[hidden] {
+  display: none;
+}
+
+/* Kaart */
+.stage {
+  min-width: 0;
+}
+
+.map {
+  position: relative;
+  min-width: 0;
+}
+
+.axis,
+.plot__cross,
+.plot__sweep {
+  display: none;
+}
+
+/* Op een smal scherm is de projectie één strook over de volle breedte, met open lijnen tussen de kwadranten. */
+.plot {
+  position: relative;
+  display: grid;
+  margin-inline: calc(-1 * var(--s-md));
+  border-block: 1px solid var(--line);
+  background-color: var(--surface);
+}
+
+.quad {
+  --wash-invloed: none;
+  --wash-belang: none;
+  position: relative;
+  min-width: 0;
+  padding: var(--s-xl) var(--s-md);
+  background-image: var(--wash-invloed), var(--wash-belang);
+}
+
+.quad + .quad {
+  border-top: 1px solid var(--line);
+}
+
+/* Het licht van de positie: amber stijgt met invloed, blauw groeit met belang */
+.quad[data-invloed="hoog"] {
+  --wash-invloed: linear-gradient(to top, transparent 18%, rgba(var(--amber-rgb), 0.2) 100%);
+}
+
+.quad[data-belang="hoog"] {
+  --wash-belang: linear-gradient(to right, transparent 18%, rgba(var(--blue-rgb), 0.2) 100%);
+}
+
+/* Scanlines, alleen op de projectie */
+.quad::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(150, 205, 255, 0.045) 0 1px, transparent 1px 4px);
+  pointer-events: none;
+}
+
+.quad__head {
+  position: relative;
+  display: grid;
+  gap: var(--s-xs);
+  margin-bottom: var(--s-lg);
+}
+
+.quad h2 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  font-stretch: 108%;
+  line-height: 1.3;
+  color: var(--ice);
+}
+
+.quad__aanpak {
+  max-width: 44ch;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-xxs) var(--s-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.level {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-xs);
+}
+
+.meter {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.meter i {
+  width: 12px;
+  height: 4px;
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px var(--mark-off);
+}
+
+.level--invloed .meter i:first-child,
+.level--invloed[data-niveau="hoog"] .meter i {
+  background: var(--amber);
+  box-shadow: 0 0 8px rgba(var(--amber-rgb), 0.55);
+}
+
+.level--belang .meter i:first-child,
+.level--belang[data-niveau="hoog"] .meter i {
+  background: var(--blue);
+  box-shadow: 0 0 8px rgba(var(--blue-rgb), 0.55);
+}
+
+/* Positieteken: links amber voor invloed, rechts blauw voor belang */
+.mark {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+}
+
+.mark path {
+  fill: none;
+  stroke: var(--mark-off);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mark circle {
+  fill: var(--text-2);
+}
+
+.mark[data-invloed="hoog"] .mark__invloed {
+  stroke: var(--amber);
+  filter: drop-shadow(0 0 3px rgba(var(--amber-rgb), 0.7));
+}
+
+.mark[data-belang="hoog"] .mark__belang {
+  stroke: var(--blue);
+  filter: drop-shadow(0 0 3px rgba(var(--blue-rgb), 0.7));
+}
+
+/* Nodes */
+.nodes {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-sm);
+}
+
+.nodes li {
+  max-width: 100%;
+}
+
+.node {
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-sm);
+  max-width: 100%;
+  min-height: 48px;
+  padding: var(--s-xs) var(--s-md) var(--s-xs) var(--s-sm);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--plate);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s, background-color 0.18s, box-shadow 0.24s;
+}
+
+.node:hover {
+  border-color: rgba(190, 226, 255, 0.85);
+  background: var(--plate-hover);
+}
+
+.node__text {
+  display: grid;
+  min-width: 0;
+}
+
+.node__naam {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.node__sub {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+/* Vastgezet: hoekhaken om de gekozen node */
+.node[aria-expanded="true"] {
+  border-color: var(--ice);
+  background: var(--plate-lock);
+  box-shadow: 0 10px 28px -10px rgba(var(--blue-rgb), 0.65);
+}
+
+.node[aria-expanded="true"] .mark circle {
+  fill: var(--ice);
+}
+
+.node[aria-expanded="true"]::after {
+  --c: var(--ice);
+  --l: 11px;
+  --t: 1.5px;
+  content: "";
+  position: absolute;
+  inset: -7px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--c), var(--c)) left top / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--c), var(--c)) left top / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) right top / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--c), var(--c)) right top / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) left bottom / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--c), var(--c)) left bottom / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) right bottom / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--c), var(--c)) right bottom / var(--t) var(--l) no-repeat;
+}
+
+/* Detailpaneel */
+.dock {
+  min-width: 0;
+}
+
+.detail {
+  position: static;
+  width: var(--detail-w);
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  color: var(--text);
+  scrollbar-color: rgba(var(--blue-rgb), 0.45) transparent;
+}
+
+.detail__inner {
+  --px: var(--s-xl);
+  padding: 0 var(--px) var(--s-xl);
+}
+
+/* De naam en de sluitknop blijven boven staan terwijl de inhoud van het paneel schuift. */
+.detail__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-md);
+  margin-inline: calc(-1 * var(--px));
+  padding: var(--s-xl) var(--px) var(--s-md);
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--panel);
+}
+
+.detail h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-stretch: 108%;
+  line-height: 1.2;
+  color: var(--ice);
+  text-wrap: balance;
+  outline: none;
+}
+
+.detail__sub {
+  margin-top: var(--s-xxs);
+  color: var(--text-2);
+}
+
+.iconbtn {
+  appearance: none;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -6px -6px 0 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s, background-color 0.18s;
+}
+
+.iconbtn:hover {
+  color: var(--ice);
+  border-color: var(--line-strong);
+  background: rgba(var(--blue-rgb), 0.1);
+}
+
+.detail__positie {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-md);
+  padding-block: var(--s-md);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.detail__positie-tekst {
+  display: grid;
+  gap: var(--s-xs);
+  min-width: 0;
+}
+
+/* Hologram van de stakeholder: blauwe figuren of het logo boven een kleine straler */
+.holoportret {
+  display: grid;
+  justify-items: center;
+  width: 76px;
+}
+
+.holoportret__beeld {
+  display: grid;
+  place-items: end center;
+  width: 100%;
+  height: 60px;
+  filter: drop-shadow(0 0 6px rgba(var(--blue-rgb), 0.6));
+  -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgba(0, 0, 0, 0.45) 2px 3px);
+  mask-image: repeating-linear-gradient(to bottom, #000 0 2px, rgba(0, 0, 0, 0.45) 2px 3px);
+}
+
+.holoportret__figuren {
+  max-width: 100%;
+  height: 56px;
+  fill: rgba(var(--blue-rgb), 0.26);
+  stroke: var(--blue);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.holoportret__logo {
+  width: 76px;
+  height: auto;
+  align-self: center;
+}
+
+.holoportret__voet {
+  width: 44px;
+  height: 7px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(var(--blue-rgb), 0.9), rgba(var(--blue-rgb), 0.12) 75%, transparent);
+}
+
+.detail__kwadrant {
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ice);
+}
+
+.detail__aanpak {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.detail h3 {
+  margin-top: var(--s-xl);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.detail__onder {
+  margin-top: var(--s-xxs);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.detail__onder strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.plan-dl {
+  margin-top: var(--s-sm);
+}
+
+.plan-dl > div {
+  padding-block: var(--s-sm);
+  border-top: 1px solid var(--line-soft);
+}
+
+.plan-dl dt {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+
+.plan-dl dd {
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+.openstate {
+  margin-top: var(--s-sm);
+  padding: var(--s-md);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+}
+
+.openstate strong {
+  display: block;
+  font-weight: 600;
+  color: var(--ice);
+}
+
+.openstate p {
+  margin-top: var(--s-xxs);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+/* Paneel als bottom sheet */
+.detail.detail--sheet {
+  position: fixed;
+  inset: auto 0 0 0;
+  width: 100%;
+  max-width: 640px;
+  max-height: min(88dvh, 720px);
+  margin-inline: auto;
+  border-bottom: 0;
+  border-radius: var(--r-xxl) var(--r-xxl) 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: 0 -24px 48px -12px rgba(0, 0, 0, 0.72);
+}
+
+.detail.detail--sheet::backdrop {
+  background: rgba(2, 6, 14, 0.66);
+}
+
+.detail--sheet .detail__inner {
+  --px: var(--s-lg);
+  padding-bottom: calc(var(--s-xl) + env(safe-area-inset-bottom));
+}
+
+/* Plan van aanpak */
+.planwrap {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.plan {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+.plan thead th {
+  padding: var(--s-md) var(--s-lg);
+  border-bottom: 1px solid var(--line);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: left;
+  vertical-align: bottom;
+  color: var(--text-2);
+}
+
+/* De productenkolom is het breedst: daar staat het langste woord. */
+.plan thead th:nth-child(1) {
+  width: 20%;
+}
+
+.plan thead th:nth-child(2) {
+  width: 20%;
+}
+
+.plan thead th:nth-child(3) {
+  width: 24%;
+}
+
+.plan thead th:nth-child(4) {
+  width: 19%;
+}
+
+.plan tbody th,
+.plan tbody td {
+  padding: var(--s-lg);
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.plan tbody tr + tr > * {
+  border-top: 1px solid var(--line-soft);
+}
+
+.plan tbody th {
+  font-weight: 400;
+}
+
+.plan__naam {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ice);
+}
+
+.plan__pos {
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+  margin-top: var(--s-xxs);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.plan__open {
+  display: inline-block;
+  padding: var(--s-xs) var(--s-md);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+  color: var(--text-2);
+}
+
+/* Onder 1200px: elke rij als blok met de vraag boven of naast het antwoord */
+@media (max-width: 1199.98px) {
+  .plan,
+  .plan tbody,
+  .plan tr,
+  .plan th,
+  .plan td {
+    display: block;
+  }
+
+  .plan thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .plan tbody tr {
+    padding: var(--s-lg);
+  }
+
+  .plan tbody tr + tr {
+    border-top: 1px solid var(--line);
+  }
+
+  .plan tbody tr + tr > * {
+    border-top: 0;
+  }
+
+  .plan tbody th,
+  .plan tbody td {
+    padding: 0;
+  }
+
+  .plan tbody td {
+    display: grid;
+    gap: 2px;
+    margin-top: var(--s-sm);
+    padding-top: var(--s-sm);
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .plan tbody tr + tr > td {
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .plan tbody td::before {
+    content: attr(data-label);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--text-3);
+  }
+
+  .plan tbody td.plan__opencel {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .plan tbody td.plan__opencel::before {
+    content: none;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1199.98px) {
+  .plan tbody td {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--s-md);
+    align-items: baseline;
+  }
+
+  .plan tbody td.plan__opencel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Documenten bij een stakeholder */
+.icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.node__docs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-xxs);
+  margin-left: var(--s-xxs);
+  padding-left: var(--s-sm);
+  border-left: 1px solid var(--line);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-2);
+}
+
+.node__docs[hidden] {
+  display: none;
+}
+
+.docs {
+  margin-top: var(--s-sm);
+  border-top: 1px solid var(--line-soft);
+}
+
+.doc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--s-xs);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.doc__link {
+  flex: 1 1 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-sm);
+  min-width: 0;
+  min-height: 44px;
+  padding-block: var(--s-xs);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.doc__link .icon {
+  margin-top: 3px;
+  color: var(--blue);
+}
+
+.doc__text {
+  display: grid;
+  min-width: 0;
+}
+
+.doc__titel {
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+a.doc__link .doc__titel {
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+a.doc__link:hover .doc__titel {
+  text-decoration-color: currentColor;
+}
+
+.doc__meta {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+
+.doc__confirm {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-xs);
+  padding-bottom: var(--s-sm);
+  font-size: 0.875rem;
+  color: var(--text-2);
+}
+
+.docs__leeg {
+  margin-top: var(--s-xs);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.docs__status {
+  margin-top: var(--s-sm);
+  padding: var(--s-xs) var(--s-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+#detail-docs > .btn {
+  margin-top: var(--s-md);
+}
+
+.plan__docs {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--s-xs);
+}
+
+.plan__docs[hidden] {
+  display: none;
+}
+
+.plan__docs .doc__link {
+  min-height: 0;
+  padding-block: 2px;
+  font-size: 0.875rem;
+}
+
+.plan__docs .doc__titel {
+  font-weight: 400;
+}
+
+/* Voortgang: sterrenkaart met planeten, en de weergave van één planeet */
+.galaxy,
+.planetview {
+  position: relative;
+  margin-inline: calc(-1 * var(--s-md));
+  border-block: 1px solid var(--line);
+  background-color: var(--surface);
+  background-image:
+    repeating-linear-gradient(to bottom, rgba(150, 205, 255, 0.045) 0 1px, transparent 1px 4px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: auto, 48px 48px, 48px 48px;
+}
+
+.galaxy[hidden],
+.planetview[hidden] {
+  display: none;
+}
+
+.galaxy {
+  height: calc(var(--n, 4) * 196px + 56px);
+  overflow: hidden;
+}
+
+.galaxy__chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.galaxy__orbit {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 2 7;
+  vector-effect: non-scaling-stroke;
+}
+
+/* De route tussen de planeten, in de volgorde van het project */
+.galaxy__route {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 1.5;
+  stroke-dasharray: 10 8;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.75;
+}
+
+.galaxy__route--wide {
+  display: none;
+}
+
+
+.planet {
+  --d: calc(var(--size) * 0.8);
+  appearance: none;
+  position: absolute;
+  top: var(--yt);
+  left: var(--xt);
+  display: grid;
+  justify-items: center;
+  gap: var(--s-xxs);
+  width: max-content;
+  max-width: 60%;
+  padding: var(--s-xs);
+  border: 0;
+  border-radius: var(--r-lg);
+  background: none;
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  /* Het midden van de planeet ligt op de route, het label hangt eronder. */
+  transform: translate(-50%, calc(var(--d) / -2 - var(--s-xs)));
+}
+
+.planet__svg {
+  width: var(--d);
+  height: auto;
+  overflow: visible;
+  transition: transform 0.4s var(--ease-out), filter 0.24s;
+}
+
+.planet:hover .planet__svg,
+.planet:focus-visible .planet__svg {
+  transform: scale(1.06);
+  filter: brightness(1.3);
+}
+
+.planet__track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.planet__ring {
+  fill: none;
+  stroke: var(--ice);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* De lichtrand om een planeet met een plaatje */
+.planet__rim {
+  fill: none;
+  stroke: var(--ice);
+  stroke-opacity: 0.7;
+  stroke-width: 1.5;
+}
+
+.planet__label {
+  display: grid;
+  gap: 2px;
+  padding: var(--s-xxs) var(--s-sm);
+  border-radius: var(--r-md);
+  background: rgba(6, 12, 24, 0.85);
+}
+
+.planet__naam {
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-stretch: 108%;
+  line-height: 1.3;
+  color: var(--ice);
+}
+
+.planet__status {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.planetview {
+  padding: var(--s-lg) var(--s-md) var(--s-xl);
+  scroll-margin-top: var(--s-md);
+}
+
+.planetview__grid {
+  display: grid;
+  gap: var(--s-lg);
+  margin-top: var(--s-lg);
+}
+
+.planetview__head {
+  display: grid;
+  gap: var(--s-xxs);
+  min-width: 0;
+}
+
+.planetview__head .progress {
+  margin-top: var(--s-sm);
+}
+
+/* Het stelsel: de planeet van dichtbij, met een maan per onderdeel op een baan eromheen.
+   De hele projectie staat boven een straler, zoals op een holotafel. */
+.system {
+  --rx: 34%;
+  --rxq: 34cqi;
+  --ry: 33%;
+  --moon: 44px;
+  --label: 37cqi;
+  container-type: inline-size;
+  position: relative;
+  min-width: 0;
+  margin-inline: calc(-1 * var(--s-md));
+  padding-bottom: 40px;
+}
+
+.system__ruimte {
+  position: relative;
+  height: 122cqi;
+}
+
+.system__baan {
+  position: absolute;
+  top: calc(50% - var(--ry));
+  left: calc(50% - var(--rx));
+  width: calc(2 * var(--rx));
+  height: calc(2 * var(--ry));
+  border: 1px dashed var(--line-strong);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.system__planet {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 43cqi;
+  translate: -50% -50%;
+}
+
+.system__planet .planet__svg {
+  display: block;
+  width: 100%;
+}
+
+/* Een lichtband die door de planeet omhoog trekt */
+.system__planet::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: circle(32.8% at 50% 50%);
+  background: linear-gradient(to top, transparent 42%, rgba(214, 236, 255, 0.2) 50%, transparent 58%) 0 0 / 100% 300%;
+  pointer-events: none;
+}
+
+/* De lichtkegel van de straler naar de planeet */
+.system__kegel {
+  position: absolute;
+  top: 50%;
+  bottom: -22px;
+  left: 50%;
+  width: 30cqi;
+  clip-path: polygon(40% 100%, 60% 100%, 100% 0, 0 0);
+  background: linear-gradient(to top, rgba(var(--blue-rgb), 0.4), rgba(var(--blue-rgb), 0.05) 88%, transparent);
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+.system.is-grid .system__kegel,
+.system.is-grid .system__voet {
+  display: none;
+}
+
+.system.is-mid {
+  --label: 32cqi;
+}
+
+.system__voet {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  width: 120px;
+  height: 20px;
+  border: 1.5px solid var(--blue);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(var(--blue-rgb), 0.6), rgba(var(--blue-rgb), 0.1) 72%, transparent);
+  translate: -50% 0;
+}
+
+.system__voet::after {
+  content: "";
+  position: absolute;
+  inset: 4px 30px;
+  border: 1px solid var(--ice);
+  border-radius: 50%;
+  opacity: 0.75;
+}
+
+/* Manen: elk op zijn plek op de baan; de naam wijst van de planeet af */
+.moons {
+  position: absolute;
+  inset: 0;
+}
+
+.moon {
+  position: absolute;
+  top: calc(50% + var(--cy) * var(--ry));
+  left: calc(50% + var(--cx) * var(--rx));
+  width: 0;
+  height: 0;
+}
+
+.moon__btn {
+  appearance: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-xxs);
+  width: max-content;
+  /* Nooit breder dan de ruimte tussen de maan en de rand van het stelsel */
+  max-width: min(var(--label), calc(100cqi - 2 * var(--ax, 0) * var(--rxq) - 8px));
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  transform: translate(-50%, calc(var(--moon) / -2));
+}
+
+.moon.is-up .moon__btn {
+  top: auto;
+  bottom: 0;
+  flex-direction: column-reverse;
+  transform: translate(-50%, calc(var(--moon) / 2));
+}
+
+.moon__beeld {
+  position: relative;
+  flex: none;
+  display: block;
+  width: var(--moon);
+  height: var(--moon);
+}
+
+.moon__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.moon__btn:hover .moon__svg,
+.moon__btn:focus-visible .moon__svg {
+  transform: scale(1.08);
+}
+
+.moon__naam.is-lang {
+  font-stretch: 76%;
+}
+
+.moon__naam {
+  padding: 2px 6px;
+  border-radius: var(--r-xs);
+  background: rgba(6, 12, 24, 0.85);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-stretch: 92%;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/* Nog niet af: gedimd met een gestippelde ring. Af: in volle kleur met een ijswitte ring en een vinkje. */
+.moon__image {
+  opacity: 0.55;
+  filter: grayscale(0.45);
+  transition: opacity 0.4s, filter 0.4s;
+}
+
+.moon[data-klaar="true"] .moon__image {
+  opacity: 1;
+  filter: none;
+}
+
+.moon__wire {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 1;
+}
+
+.moon__ring {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1.25;
+  stroke-dasharray: 3 4;
+}
+
+.moon[data-klaar="true"] .moon__ring {
+  stroke: var(--ice);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+
+.moon__rim {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 1.25;
+}
+
+.moon[data-klaar="true"] .moon__rim {
+  stroke: var(--ice);
+}
+
+.moon__check circle {
+  fill: var(--ice);
+}
+
+.moon__check path {
+  fill: none;
+  stroke: #06101f;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Meer manen dan er op één baan passen: de manen staan in rijen onder de planeet */
+.system.is-grid .system__ruimte {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-lg);
+  height: auto;
+  padding: var(--s-lg) var(--s-md);
+}
+
+.system.is-grid .system__baan {
+  display: none;
+}
+
+.system.is-grid .system__planet {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(46cqi, 240px);
+  translate: none;
+}
+
+.system.is-grid .moons {
+  position: static;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: var(--s-lg) var(--s-xs);
+  width: 100%;
+}
+
+.system.is-grid .moon {
+  position: static;
+  width: auto;
+  min-width: 0;
+  height: auto;
+}
+
+.system.is-grid .moon__btn {
+  position: static;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  transform: none;
+}
+
+/* Een maan van dichtbij: dezelfde projectie, met alleen die ene maan in het midden */
+.system--maan .system__ruimte {
+  height: 84cqi;
+}
+
+.system--maan .system__planet {
+  width: 62cqi;
+}
+
+.system--maan .system__planet .moon__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Van dichtbij geen dimmen: de status staat in de ring, het vinkje en de tekst */
+.system--maan .moon__image {
+  opacity: 1;
+  filter: none;
+}
+
+.system--maan .system__planet::after {
+  clip-path: circle(35.9% at 50% 50%);
+}
+
+.moonview__afvinken {
+  margin-top: var(--s-md);
+}
+
+@media (min-width: 640px) {
+  .system--maan .system__ruimte {
+    height: 64cqi;
+  }
+
+  .system--maan .system__planet {
+    width: 48cqi;
+  }
+}
+
+.planetview__extra {
+  display: grid;
+  gap: var(--s-xxl);
+  margin-top: var(--s-xxl);
+  padding-top: var(--s-xl);
+  border-top: 1px solid var(--line-soft);
+}
+
+.planetview h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-stretch: 108%;
+  line-height: 1.2;
+  color: var(--ice);
+  outline: none;
+}
+
+.planetview__status {
+  color: var(--text-2);
+}
+
+.planetview__body {
+  display: grid;
+  gap: var(--s-xxl);
+  min-width: 0;
+}
+
+.planetview h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.planetview__section > * + * {
+  margin-top: var(--s-sm);
+}
+
+/* Video's bij een onderdeel */
+.clips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 560px));
+  gap: var(--s-md);
+}
+
+.clip {
+  display: grid;
+  gap: var(--s-xs);
+  min-width: 0;
+  margin: 0;
+}
+
+.clip video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--space-deep);
+}
+
+.clip figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-sm);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.clip__titel {
+  font-weight: 500;
+}
+
+.clip__duur {
+  flex: none;
+  color: var(--text-3);
+}
+
+.progress {
+  height: 8px;
+  border-radius: var(--r-full);
+  background: rgba(128, 176, 224, 0.2);
+  overflow: hidden;
+}
+
+.progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ice);
+}
+
+.progress__text {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+/* De manen als lijst, naast het stelsel */
+.moonlist {
+  border-top: 1px solid var(--line-soft);
+}
+
+.moonrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  min-height: 48px;
+  padding-block: var(--s-xxs);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.moonrow > .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-3);
+}
+
+.moonrow[data-klaar="true"] > .icon {
+  color: var(--ice);
+}
+
+.moonrow__titel {
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.moonrow__status {
+  flex: none;
+  margin-left: auto;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+
+.moonrow[data-klaar="true"] .moonrow__status {
+  color: var(--text-2);
+}
+
+.check {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  min-width: 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.check input {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.check__box {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-xs);
+}
+
+.check input:checked + .check__box {
+  border-color: var(--ice);
+  background: var(--ice);
+}
+
+.check input:checked + .check__box::after {
+  content: "";
+  width: 11px;
+  height: 6px;
+  border-bottom: 2px solid #06101f;
+  border-left: 2px solid #06101f;
+  transform: translateY(-1px) rotate(-45deg);
+}
+
+.check input:focus-visible + .check__box {
+  outline: 2px solid var(--ice);
+  outline-offset: 3px;
+}
+
+.moonform {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-xs);
+}
+
+.moonform .field {
+  flex: 1 1 200px;
+}
+
+.nodes--links {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* Een stakeholder in de planeetweergave: zelfde vorm als een node op de kaart */
+.stakelink {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-sm);
+  max-width: 100%;
+  min-height: 48px;
+  padding: var(--s-xs) var(--s-md) var(--s-xs) var(--s-sm);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--plate);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s, background-color 0.18s;
+}
+
+.stakelink:hover {
+  border-color: rgba(190, 226, 255, 0.85);
+  background: var(--plate-hover);
+}
+
+/* De sprong naar een planeet */
+.hyperspace {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.34s ease-out;
+}
+
+.hyperspace.is-out {
+  opacity: 0;
+}
+
+@media (min-width: 640px) {
+  .galaxy,
+  .planetview {
+    margin-inline: 0;
+    border: 1px solid var(--line-soft);
+  }
+
+  .system {
+    --rx: 37%;
+    --rxq: 37cqi;
+    --moon: clamp(48px, 8cqi, 60px);
+    --label: 30cqi;
+    margin-inline: 0;
+  }
+
+  .system.is-mid {
+    --label: 24cqi;
+  }
+
+  .system.is-compact {
+    --moon: 44px;
+    --label: 22cqi;
+  }
+
+  .system__ruimte {
+    height: 76cqi;
+  }
+
+  .system__planet {
+    width: 42cqi;
+  }
+
+  .system:not(.is-compact) .moon__naam {
+    font-size: 0.875rem;
+  }
+
+  .system:not(.is-compact) .moon__naam:not(.is-lang) {
+    font-stretch: 100%;
+  }
+
+}
+
+/* De golvende route van links naar rechts: alleen als elke planeet minstens 190px breed krijgt.
+   De pagina zet dan de klasse is-wide; anders loopt de route van boven naar beneden. */
+.galaxy.is-wide {
+  height: clamp(440px, 62vh, 560px);
+}
+
+.galaxy.is-wide .galaxy__route--wide {
+  display: inline;
+}
+
+.galaxy.is-wide .galaxy__route--tall {
+  display: none;
+}
+
+.galaxy.is-wide .planet {
+  --d: var(--size);
+  top: var(--yw);
+  left: var(--xw);
+  max-width: none;
+}
+
+@media (min-width: 900px) {
+  .planetview {
+    padding: var(--s-xl) var(--s-xxl) var(--s-xxl);
+  }
+
+  .planetview__extra {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--s-section-sm);
+  }
+
+  .planetview h2 {
+    font-size: 2.25rem;
+  }
+}
+
+/* Vanaf 1100px staat de lijst naast het stelsel; smaller dan dat blijft het stelsel op volle breedte */
+@media (min-width: 1100px) {
+  .planetview__grid {
+    grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+    grid-template-areas:
+      "stelsel kop"
+      "stelsel manen";
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    gap: var(--s-lg) var(--s-section-sm);
+  }
+
+  .planetview__head {
+    grid-area: kop;
+  }
+
+  .system {
+    grid-area: stelsel;
+  }
+
+  .planetview__body {
+    grid-area: manen;
+  }
+}
+
+/* Knoppen en velden */
+.btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-xs);
+  min-height: 44px;
+  padding: var(--s-xs) 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s, background-color 0.18s;
+}
+
+.btn:hover {
+  border-color: rgba(190, 226, 255, 0.85);
+  background: rgba(var(--blue-rgb), 0.1);
+}
+
+.btn--primary,
+.btn--primary:hover {
+  border-color: var(--ice);
+  background: var(--ice);
+  color: #06101f;
+}
+
+.btn--primary:hover {
+  border-color: #fff;
+  background: #fff;
+}
+
+.btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn--danger:hover {
+  border-color: var(--danger);
+  background: rgba(255, 156, 156, 0.14);
+}
+
+.btn:disabled,
+.iconbtn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.iconbtn--small {
+  margin: 0;
+  border-color: transparent;
+}
+
+.linkbtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.linkbtn:hover {
+  color: var(--ice);
+  text-decoration-color: currentColor;
+}
+
+.docform,
+.teamform {
+  display: grid;
+  gap: var(--s-md);
+}
+
+.docform {
+  margin-top: var(--s-md);
+  padding-top: var(--s-md);
+  border-top: 1px solid var(--line);
+}
+
+.field {
+  display: grid;
+  gap: var(--s-xxs);
+}
+
+.field[hidden] {
+  display: none;
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.field input {
+  font-family: inherit;
+}
+
+.field input:not([type="file"]) {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--s-md);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: rgba(4, 8, 18, 0.7);
+  color: var(--text);
+  font-size: 1rem;
+  caret-color: var(--blue);
+}
+
+.field input::placeholder {
+  color: var(--text-3);
+  opacity: 1;
+}
+
+.field input:not([type="file"]):focus-visible {
+  border-color: var(--ice);
+  outline-offset: 1px;
+}
+
+.field input[type="file"] {
+  width: 100%;
+  font-size: 0.875rem;
+  color: var(--text-2);
+}
+
+.field input[type="file"]::file-selector-button {
+  min-height: 44px;
+  margin-right: var(--s-sm);
+  padding: var(--s-xs) var(--s-md);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.hint {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-3);
+}
+
+.hint a {
+  color: var(--blue);
+  text-underline-offset: 3px;
+}
+
+.formerror {
+  padding: var(--s-xs) var(--s-sm);
+  border: 1px solid var(--danger);
+  border-radius: var(--r-md);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--danger);
+}
+
+.formerror[hidden] {
+  display: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-xs);
+}
+
+/* Keuze tussen bestand en link, in de vorm van de schakelaar bovenaan */
+.seg {
+  display: inline-flex;
+  gap: var(--s-xs);
+}
+
+.seg__item {
+  position: relative;
+  display: inline-flex;
+}
+
+.seg__item input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.seg__item span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--s-xs) var(--s-md);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.seg__item input:checked + span {
+  border-color: var(--ice);
+  background: var(--ice);
+  color: #06101f;
+}
+
+.seg__item input:focus-visible + span {
+  outline: 2px solid var(--ice);
+  outline-offset: 3px;
+}
+
+/* Venster voor teamtoegang */
+.modal {
+  width: min(480px, calc(100% - 2 * var(--s-md)));
+  max-height: calc(100dvh - 2 * var(--s-md));
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  color: var(--text);
+  overflow-y: auto;
+}
+
+.modal::backdrop {
+  background: rgba(2, 6, 14, 0.66);
+}
+
+.modal__inner {
+  display: grid;
+  gap: var(--s-sm);
+  padding: var(--s-xl);
+}
+
+.modal h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-stretch: 108%;
+  line-height: 1.2;
+  color: var(--ice);
+  outline: none;
+}
+
+.modal p {
+  line-height: 1.55;
+}
+
+.modal__sub {
+  color: var(--text-2);
+}
+
+.modal .actions {
+  margin-top: var(--s-xs);
+}
+
+/* Voet */
+.colophon {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-xl);
+  margin-top: var(--s-section-sm);
+  padding-top: var(--s-md);
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+.colophon__text {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-xxs);
+  min-width: 0;
+}
+
+/* Editor (editor.html): de balk bovenaan, planeten toevoegen en beheren. Bezoekers zien dit niet. */
+.editorbalk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-xs) var(--s-xl);
+  margin-bottom: var(--s-lg);
+  padding: var(--s-sm) var(--s-md);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--plate);
+}
+
+.editorbalk__tekst {
+  flex: 1 1 320px;
+  max-width: 70ch;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.editorbalk__acties {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-xs) var(--s-lg);
+}
+
+.galaxytools {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-sm);
+  margin-top: var(--s-md);
+}
+
+.galaxytools[hidden] {
+  display: none;
+}
+
+.galaxytools h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.galaxytools .docs__status {
+  margin-top: 0;
+}
+
+.galaxytools .planeetform {
+  justify-self: stretch;
+  padding: var(--s-lg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--plate);
+}
+
+.planeetform {
+  display: grid;
+  gap: var(--s-md);
+}
+
+.planeetform .field input {
+  max-width: 28rem;
+}
+
+.picker {
+  display: grid;
+  gap: var(--s-xs);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.picker legend {
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.picker__rij {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: var(--s-xs);
+}
+
+.picker__checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 0 var(--s-md);
+}
+
+.pick {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--s-xxs);
+  min-height: 44px;
+  padding: var(--s-xs) var(--s-xxs);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  text-align: center;
+  cursor: pointer;
+}
+
+.pick:hover {
+  border-color: var(--line-strong);
+}
+
+.pick input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.pick__beeld {
+  display: block;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.pick__beeld--draad {
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 50%;
+}
+
+.pick__naam {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.pick:has(input:checked) {
+  border-color: var(--ice);
+  background: rgba(var(--blue-rgb), 0.12);
+}
+
+.pick:has(input:checked) .pick__naam {
+  color: var(--ice);
+}
+
+.pick:has(input:focus-visible) {
+  outline: 2px solid var(--ice);
+  outline-offset: 2px;
+}
+
+.planetview__beheer {
+  display: grid;
+  gap: var(--s-sm);
+  margin-top: var(--s-xxl);
+  padding-top: var(--s-xl);
+  border-top: 1px solid var(--line-soft);
+}
+
+.galaxy.is-leeg {
+  display: grid;
+  place-items: center;
+  height: auto;
+  min-height: 220px;
+  padding: var(--s-xl) var(--s-md);
+}
+
+.galaxy__leeg {
+  position: relative;
+  max-width: 40ch;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-2);
+}
+
+/* Vanaf 640px: de kaart als 2x2 met assen */
+@media (min-width: 640px) {
+  .page {
+    padding: var(--s-xxl) var(--s-xl) var(--s-section);
+  }
+
+  .tabs {
+    gap: var(--s-xs);
+  }
+
+  .tab {
+    padding: var(--s-xs) 18px;
+    font-size: 0.9375rem;
+    font-stretch: 100%;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+  }
+
+  .map {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-rows: auto 44px;
+  }
+
+  .axis {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-stretch: 82%;
+    line-height: 1;
+    color: var(--text-2);
+  }
+
+  .axis__naam {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .axis--y {
+    grid-column: 1;
+    grid-row: 1;
+    flex-direction: column;
+    padding: var(--s-xl) 14px var(--s-xs) 0;
+  }
+
+  .axis--y span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .axis--y .axis__naam {
+    color: var(--amber);
+  }
+
+  .axis--y::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: -2px;
+    width: 2px;
+    background: linear-gradient(to top, rgba(var(--amber-rgb), 0.3), var(--amber));
+    box-shadow: 0 0 12px rgba(var(--amber-rgb), 0.5);
+    transform-origin: bottom;
+  }
+
+  .axis--y::before {
+    content: "";
+    position: absolute;
+    top: 1px;
+    right: -3.5px;
+    width: 9px;
+    height: 9px;
+    border-top: 2px solid var(--amber);
+    border-left: 2px solid var(--amber);
+    transform: rotate(45deg);
+  }
+
+  .axis--x {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 14px var(--s-xl) 0 var(--s-xs);
+  }
+
+  .axis--x .axis__naam {
+    color: var(--blue);
+  }
+
+  .axis--x::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(to right, rgba(var(--blue-rgb), 0.3), var(--blue));
+    box-shadow: 0 0 12px rgba(var(--blue-rgb), 0.5);
+    transform-origin: left;
+  }
+
+  .axis--x::before {
+    content: "";
+    position: absolute;
+    top: -3.5px;
+    right: 1px;
+    width: 9px;
+    height: 9px;
+    border-top: 2px solid var(--blue);
+    border-right: 2px solid var(--blue);
+    transform: rotate(45deg);
+  }
+
+  .plot {
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    margin-inline: 0;
+    border: 1px solid var(--line-soft);
+    border-left: 0;
+    border-bottom: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: left bottom;
+    background-color: var(--surface);
+    overflow: hidden;
+  }
+
+  .quad {
+    min-height: 264px;
+    padding: var(--s-xl);
+  }
+
+  .quad + .quad {
+    border-top: 0;
+  }
+
+  .quad[data-invloed="hoog"] {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .quad[data-belang="laag"] {
+    border-right: 1px solid var(--line);
+  }
+
+  .plot__cross {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: block;
+    width: 36px;
+    height: 36px;
+    translate: -50% -50%;
+    color: var(--line-strong);
+    pointer-events: none;
+  }
+
+  .plot__sweep {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: block;
+    height: 32%;
+    background: linear-gradient(to bottom, transparent, rgba(var(--blue-rgb), 0.05) 70%, rgba(190, 228, 255, 0.13) 100%);
+    transform: translateY(-101%);
+    pointer-events: none;
+  }
+}
+
+/* Vanaf 1024px: paneel naast de kaart, de kaart maakt ruimte */
+@media (min-width: 1024px) {
+  .page {
+    padding: var(--s-xxl) var(--s-xxl) var(--s-section);
+  }
+
+  main {
+    margin-top: var(--s-md);
+  }
+
+  .quad__head {
+    margin-bottom: var(--s-md);
+  }
+
+  .masthead {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--s-section-sm);
+  }
+
+  h1 {
+    font-size: 3rem;
+    letter-spacing: -0.5px;
+  }
+
+  .titleblock {
+    max-width: 460px;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 0px;
+    align-items: start;
+    transition: grid-template-columns 0.42s var(--ease-out);
+  }
+
+  .stage.is-docked {
+    grid-template-columns: minmax(0, 1fr) calc(var(--detail-w) + var(--s-xl));
+  }
+
+  .dock {
+    position: sticky;
+    top: var(--s-xl);
+    overflow: hidden;
+  }
+
+  .detail:not(.detail--sheet) {
+    max-height: var(--detail-max, calc(100dvh - 2 * var(--s-xl)));
+    margin-left: var(--s-xl);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transition: opacity 0.24s;
+  }
+
+  .detail:not(.detail--sheet).is-closing {
+    opacity: 0;
+  }
+
+  .quad {
+    min-height: 288px;
+  }
+}
+
+/* Beweging: één projectie bij laden, een trage scanlijn, verder alleen reacties */
+@media (prefers-reduced-motion: no-preference) {
+  .sky-lights span {
+    animation: twinkle 6s ease-in-out infinite;
+    animation-delay: var(--d, 0s);
+  }
+
+  .view {
+    animation: view-in 0.32s var(--ease-out);
+  }
+
+  .holo {
+    animation: zweef 7s ease-in-out infinite alternate;
+  }
+
+  .modal[open] {
+    animation: modal-in 0.32s var(--ease-out);
+  }
+
+  .galaxy__route {
+    animation: lane 2.4s linear infinite;
+  }
+
+  /* Hologrammen flikkeren heel licht; een lichtband trekt door de projectie omhoog */
+  .holoportret__beeld,
+  .system__planet {
+    animation: holo-flikker 6s linear infinite;
+  }
+
+  .system__planet::after {
+    animation: holo-band 5s linear infinite;
+  }
+
+  .system__kegel {
+    animation: holo-kegel 6s linear infinite;
+  }
+
+  /* Bij aankomst komt de planeet dichterbij, daarna schieten de manen naar hun plek op de baan */
+  .planetview.is-arriving .system__planet {
+    animation: nader 0.9s var(--ease-out) backwards, holo-flikker 6s linear 0.9s infinite;
+  }
+
+  .planetview.is-arriving .system__kegel {
+    animation: fade-in 0.6s ease-out backwards, holo-kegel 6s linear 0.6s infinite;
+  }
+
+  .planetview.is-arriving .system__baan {
+    animation: fade-in 0.6s ease-out 0.45s backwards;
+  }
+
+  .planetview.is-arriving .moon {
+    animation: maan-uit 0.7s var(--ease-out) backwards;
+    animation-delay: calc(0.5s + var(--i, 0) * 0.07s);
+  }
+
+  /* Een maan die het team net heeft toegevoegd */
+  .moon.is-new {
+    animation: maan-uit 0.9s var(--ease-out) backwards;
+  }
+
+  .moon.is-new .moon__svg {
+    animation: maan-gloed 1.8s ease-out;
+  }
+
+  .planetview.is-arriving .planetview__head,
+  .planetview.is-arriving .planetview__body,
+  .planetview.is-arriving .planetview__extra {
+    animation: resolve 0.5s var(--ease-out) 0.25s backwards;
+  }
+
+  .modal[open]::backdrop {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .node[aria-expanded="true"]::after {
+    animation: lock 0.36s var(--ease-out) backwards;
+  }
+
+  .detail--sheet[open] {
+    animation: sheet-in 0.42s var(--ease-out);
+  }
+
+  .detail--sheet[open]::backdrop {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .detail--sheet.is-closing {
+    animation: sheet-out 0.22s ease-in forwards;
+  }
+
+  .detail--sheet.is-closing::backdrop {
+    animation: fade-out 0.22s ease-in forwards;
+  }
+
+  .map.is-booting .quad__head {
+    animation: resolve 0.6s var(--ease-out) backwards;
+    animation-delay: calc(0.1s + var(--i, 0) * 0.08s);
+  }
+
+  .map.is-booting .node {
+    animation: resolve 0.5s var(--ease-out) backwards;
+    animation-delay: calc(0.3s + var(--n, 0) * 0.06s);
+  }
+
+  @media (min-width: 640px) {
+    .plot__sweep {
+      animation: sweep 12s linear 2.4s infinite;
+    }
+
+    .map.is-booting .plot {
+      animation: project 0.9s var(--ease-out) backwards;
+    }
+
+    .map.is-booting .axis--y::after {
+      animation: draw-y 0.8s var(--ease-out) backwards;
+    }
+
+    .map.is-booting .axis--x::after {
+      animation: draw-x 0.8s var(--ease-out) backwards;
+    }
+
+    .map.is-booting .axis::before,
+    .map.is-booting .axis span {
+      animation: fade-in 0.5s ease-out 0.5s backwards;
+    }
+
+    .map.is-booting .quad__head {
+      animation-delay: calc(0.4s + var(--i, 0) * 0.08s);
+    }
+
+    .map.is-booting .node {
+      animation-delay: calc(0.65s + var(--n, 0) * 0.06s);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .detail:not(.detail--sheet)[open] {
+      animation: dock-in 0.42s var(--ease-out);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  .fallback {
+    opacity: 1;
+  }
+}
+
+@keyframes zweef {
+  from {
+    transform: translateY(-3px);
+  }
+  to {
+    transform: translateY(3px);
+  }
+}
+
+@keyframes lane {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+@keyframes holo-flikker {
+  0%,
+  2.5%,
+  4%,
+  41%,
+  43.5%,
+  78%,
+  81%,
+  100% {
+    opacity: 1;
+  }
+  3% {
+    opacity: 0.8;
+  }
+  42% {
+    opacity: 0.9;
+  }
+  79% {
+    opacity: 0.76;
+  }
+  80% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes holo-band {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 100%;
+  }
+}
+
+@keyframes holo-kegel {
+  0%,
+  2.5%,
+  4%,
+  78%,
+  81%,
+  100% {
+    opacity: 1;
+  }
+  3%,
+  79% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes nader {
+  from {
+    opacity: 0;
+    scale: 0.4;
+    filter: brightness(2.2) blur(5px);
+  }
+}
+
+@keyframes maan-uit {
+  from {
+    top: 50%;
+    left: 50%;
+    opacity: 0;
+    scale: 0.2;
+  }
+}
+
+@keyframes maan-gloed {
+  from {
+    filter: drop-shadow(0 0 14px rgba(214, 236, 255, 0.95));
+  }
+  to {
+    filter: drop-shadow(0 0 0 rgba(214, 236, 255, 0));
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes lock {
+  from {
+    opacity: 0;
+    transform: scale(1.14);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+/* De projectie groeit vanuit de oorsprong van de assen, linksonder */
+@keyframes project {
+  from {
+    clip-path: inset(100% 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes draw-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes resolve {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(6px);
+  }
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateY(-101%);
+  }
+  55%,
+  100% {
+    transform: translateY(330%);
+  }
+}
+
+@media print {
+  .sky,
+  .sky-lights,
+  .switchbar {
+    display: none;
+  }
+}
