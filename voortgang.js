@@ -21,12 +21,6 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "beeld": "dagobah"
       },
       {
-        "id": "persona",
-        "titel": "Persona",
-        "klaar": false,
-        "beeld": "lothal"
-      },
-      {
         "id": "best-practice",
         "titel": "Best practice",
         "klaar": false,
