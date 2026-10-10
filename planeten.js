@@ -14,7 +14,14 @@ window.STAKEHOLDERMAP_PLANETEN = [
     "id": "deskresearch",
     "naam": "Deskresearch",
     "planeet": "coruscant",
-    "stakeholders": []
+    "stakeholders": [
+      "docenten-coach",
+      "mark-vernon",
+      "projectgroep",
+      "bezoekers",
+      "doelgroep",
+      "testpubliek"
+    ]
   },
   {
     "id": "fieldresearch",
