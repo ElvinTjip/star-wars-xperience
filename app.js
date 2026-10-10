@@ -2422,10 +2422,13 @@
     const key = token || (team && team.token);
     if (key) headers.Authorization = "Bearer " + key;
     if (opts.body) headers["Content-Type"] = "application/json";
+    /* GitHub laat een gelezen bestand 60 seconden in de browsercache staan. Zonder no-store gebruikt een tweede
+       wijziging binnen een minuut een verouderde versie (sha) en mislukt ze. */
     const response = await fetch(GITHUB + path, {
       method: opts.method || "GET",
       headers,
-      body: opts.body ? JSON.stringify(opts.body) : undefined
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      cache: "no-store"
     });
     if (!response.ok) throw apiError(response.status);
     return response.status === 204 ? null : response.json();
@@ -2669,7 +2672,13 @@
       entry.url = input.url;
     }
 
-    documenten = await updateFile(FILES.documenten, (list) => list.concat(entry), "Documentenlijst bijgewerkt: " + input.titel);
+    try {
+      documenten = await updateFile(FILES.documenten, (list) => list.concat(entry), "Documentenlijst bijgewerkt: " + input.titel);
+    } catch (error) {
+      /* Lukt het bijwerken van de lijst niet, dan blijft het geüploade bestand niet als wees achter. */
+      if (entry.pad) await deleteRepoFile(entry).catch(() => {});
+      throw error;
+    }
   }
 
   /* Haalt het bestand van een document uit de repository. Is het er al niet meer, dan is dat prima. */
@@ -2742,9 +2751,11 @@
       setPlaneten(planeten.value);
       renderDocuments();
       renderVoortgang();
-      /* Wijst de link naar een planeet die alleen in de repository staat, dan opent hij nu. */
+      /* Wijst de link naar een planeet of maan die alleen in de repository staat, dan opent hij nu. */
       const route = routeFromHash();
-      if (route && route.planet && !currentPlanet && currentView === "voortgang") applyRoute(route);
+      const nogNiet = (r) =>
+        !currentPlanet || (currentPlanet === r.planet && !currentMoon && r.moon && findMoon(r.planet, r.moon));
+      if (route && route.planet && currentView === "voortgang" && nogNiet(route)) applyRoute(route);
     } catch (error) {
       if (error.status === 401) {
         disconnect();
