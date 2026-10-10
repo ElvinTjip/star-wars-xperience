@@ -343,6 +343,21 @@
     } catch (error) {
       /* Sommige browsers staan dit niet toe op file://; de weergave werkt dan gewoon door. */
     }
+    syncEditorLink();
+  }
+
+  /* Op de bezoekerspagina: een rustige link in de voet naar de editor, naar dezelfde plek als waar je nu bent.
+     Wie de editor opent zonder sleutel met schrijfrechten, kan er niets opslaan. */
+  let editorLink = null;
+
+  function syncEditorLink() {
+    if (editorLink) editorLink.setAttribute("href", "editor.html" + window.location.hash);
+  }
+
+  function buildEditorLink() {
+    editorLink = el("a", { class: "linkbtn", id: "editor-link", text: TT.editorLink });
+    byId("voettekst").after(editorLink);
+    syncEditorLink();
   }
 
   /* ---------- Kaart ---------- */
@@ -3055,6 +3070,7 @@
     restoreTeam();
   }
   renderMasthead();
+  if (!EDITOR) buildEditorLink();
   renderTabs();
   renderMap();
   renderPlan();
@@ -3070,6 +3086,7 @@
 
   /* Alleen wisselen als de hash een weergave is; andere ankers, zoals #inhoud, laten de weergave met rust. */
   window.addEventListener("hashchange", () => {
+    syncEditorLink();
     const route = routeFromHash();
     if (route) applyRoute(route);
   });

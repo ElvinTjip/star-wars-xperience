@@ -366,6 +366,7 @@ window.STAKEHOLDERMAP = {
       balkUit: "Dit is de editor. Verbind met GitHub om planeten, manen en documenten toe te voegen of te verwijderen.",
       balkAan: "Je bewerkt als {naam}. Wat je wijzigt staat na ongeveer een minuut online voor bezoekers.",
       bezoekerLink: "Bezoekersweergave",
+      editorLink: "Editor voor het team",
       uitleg: "Als teamlid kun je in de editor planeten, manen en documenten toevoegen en verwijderen. Alles wordt opgeslagen in de GitHub-repository {repository} en is daarna voor iedereen zichtbaar.",
       geenRepository: "Bewerken werkt zodra de site op GitHub staat. Staat hij ergens anders, vul dan in data.js bij github de eigenaar en de repository in.",
       veldSleutel: "GitHub-toegangssleutel",
