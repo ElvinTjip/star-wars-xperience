@@ -17,7 +17,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "doelgroep",
         "titel": "Doelgroep",
-        "klaar": false,
+        "klaar": true,
         "beeld": "dagobah"
       },
       {
