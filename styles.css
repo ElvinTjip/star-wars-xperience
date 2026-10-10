@@ -2228,6 +2228,25 @@ a.doc__link:hover .doc__titel {
   color: var(--text-2);
 }
 
+/* Onderdeel van het venster met een eigen kop, zoals het teamwachtwoord */
+.modal__sectie {
+  display: grid;
+  gap: var(--s-sm);
+  margin-top: var(--s-xs);
+  padding-top: var(--s-md);
+  border-top: 1px solid var(--line-soft);
+}
+
+.modal h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.modal .linkbtn {
+  justify-self: start;
+}
+
 .modal .actions {
   margin-top: var(--s-xs);
 }

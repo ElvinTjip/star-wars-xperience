@@ -2471,7 +2471,9 @@
     return error;
   }
 
-  async function connect(token) {
+  /* Opties: naam (de naam die het teamlid zelf opgaf, bij inloggen met het teamwachtwoord) en via ("sleutel" of "wachtwoord"). */
+  async function connect(token, opties) {
+    const extra = opties || {};
     const repo = detectRepo();
     if (!repo) throw coded("geenRepository");
 
@@ -2493,14 +2495,17 @@
     }
     if (map === null) throw coded("foutSite");
 
-    let login = "";
-    try {
-      login = (await github("/user", null, token)).login || "";
-    } catch (error) {
-      /* De naam is alleen voor de weergave; zonder naam werkt alles ook. */
+    /* Met het teamwachtwoord geeft het teamlid zijn eigen naam op; met een eigen sleutel is dat zijn GitHub-naam. */
+    let login = extra.naam || "";
+    if (!login) {
+      try {
+        login = (await github("/user", null, token)).login || "";
+      } catch (error) {
+        /* De naam is alleen voor de weergave; zonder naam werkt alles ook. */
+      }
     }
 
-    team = { token, login, eigenaar: repo.eigenaar, repository: repo.repository, branch, map };
+    team = { token, login, eigenaar: repo.eigenaar, repository: repo.repository, branch, map, via: extra.via || "sleutel" };
     try {
       window.localStorage.setItem(TEAM_KEY, JSON.stringify(team));
     } catch (error) {
@@ -2526,6 +2531,137 @@
     } catch (error) {
       team = null;
     }
+  }
+
+  /* ---------- Teamwachtwoord: de sleutel versleuteld in de repository ----------
+     Een teamlid met een eigen fine-grained sleutel kan die met een wachtwoord versleutelen (PBKDF2 en AES-GCM,
+     in de browser) en als toegang.json in de repository zetten. De anderen loggen dan in met hun naam en dat
+     wachtwoord; de pagina ontsleutelt de sleutel en gebruikt hem als een eigen sleutel. */
+
+  const TOEGANG_BESTAND = "toegang.json";
+  const KDF_ITERATIES = 600000;
+  const MIN_WACHTWOORD = 16;
+  let toegang; /* undefined: nog niet opgehaald; null: geen teamwachtwoord; anders het versleutelde pakket */
+
+  const cryptoBeschikbaar = () => Boolean(window.crypto && window.crypto.subtle);
+
+  function base64ToBytes(base64) {
+    const binary = window.atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  const geldigPakket = (p) =>
+    Boolean(p) &&
+    p.versie === 1 &&
+    Number.isInteger(p.iteraties) &&
+    p.iteraties >= 100000 &&
+    typeof p.zout === "string" &&
+    typeof p.iv === "string" &&
+    typeof p.versleuteld === "string";
+
+  const wachtwoordSterkGenoeg = (wachtwoord) => wachtwoord.length >= MIN_WACHTWOORD && new Set(wachtwoord).size >= 8;
+
+  async function afleiden(wachtwoord, zout, iteraties) {
+    const basis = await window.crypto.subtle.importKey("raw", new TextEncoder().encode(wachtwoord), "PBKDF2", false, ["deriveKey"]);
+    return window.crypto.subtle.deriveKey(
+      { name: "PBKDF2", hash: "SHA-256", salt: zout, iterations: iteraties },
+      basis,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  async function versleutel(token, wachtwoord) {
+    if (!cryptoBeschikbaar()) throw coded("foutCrypto");
+    const zout = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const sleutel = await afleiden(wachtwoord, zout, KDF_ITERATIES);
+    const dicht = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, sleutel, new TextEncoder().encode(token));
+    return {
+      versie: 1,
+      kdf: "PBKDF2-SHA256",
+      iteraties: KDF_ITERATIES,
+      zout: bytesToBase64(zout),
+      iv: bytesToBase64(iv),
+      versleuteld: bytesToBase64(new Uint8Array(dicht))
+    };
+  }
+
+  /* Een verkeerd wachtwoord geeft een mislukte controle van AES-GCM; dat is de enige manier om het te merken. */
+  async function ontsleutel(pakket, wachtwoord) {
+    if (!cryptoBeschikbaar()) throw coded("foutCrypto");
+    try {
+      const sleutel = await afleiden(wachtwoord, base64ToBytes(pakket.zout), pakket.iteraties);
+      const open = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(pakket.iv) }, sleutel, base64ToBytes(pakket.versleuteld));
+      return new TextDecoder().decode(open);
+    } catch (error) {
+      throw coded("foutWachtwoord");
+    }
+  }
+
+  /* Een wachtwoord van 20 tekens uit 31 leesbare tekens (zonder i, l, o, 0 en 1): ongeveer 99 bit. */
+  function genereerWachtwoord() {
+    const alfabet = "abcdefghjkmnpqrstuvwxyz23456789";
+    let tekens = "";
+    while (tekens.length < 20) {
+      for (const byte of window.crypto.getRandomValues(new Uint8Array(32))) {
+        /* 248 is 8 keer 31: bytes daarboven overslaan, zodat geen teken vaker voorkomt. */
+        if (byte < 248 && tekens.length < 20) tekens += alfabet[byte % alfabet.length];
+      }
+    }
+    return tekens.match(/.{4}/g).join("-");
+  }
+
+  /* Haalt toegang.json op. Dat mag zonder inloggen: de repository is publiek. */
+  async function laadToegang() {
+    toegang = null;
+    const repo = team || detectRepo();
+    if (!repo) return;
+    const kandidaten = team ? [team.map] : repo.map ? [repo.map] : ["", "site", "docs"];
+    for (const map of kandidaten) {
+      try {
+        const ref = team ? "?ref=" + encodeURIComponent(team.branch) : "";
+        const bestand = await github(contentsPath({ ...repo, map }, TOEGANG_BESTAND) + ref);
+        const pakket = JSON.parse(base64ToText(bestand.content || ""));
+        if (geldigPakket(pakket)) toegang = pakket;
+        return;
+      } catch (error) {
+        /* Geen bestand in deze map, of het is niet te lezen: dan is er geen teamwachtwoord. */
+      }
+    }
+  }
+
+  async function schrijfToegang(pakket) {
+    let sha = null;
+    try {
+      sha = (await github(contentsPath(team, TOEGANG_BESTAND) + "?ref=" + encodeURIComponent(team.branch))).sha;
+    } catch (error) {
+      if (error.status !== 404) throw error;
+    }
+    const body = {
+      message: "Teamwachtwoord ingesteld",
+      content: textToBase64(JSON.stringify(pakket, null, 2) + "\n"),
+      branch: team.branch
+    };
+    if (sha) body.sha = sha;
+    await github(contentsPath(team, TOEGANG_BESTAND), { method: "PUT", body });
+    toegang = pakket;
+  }
+
+  async function verwijderToegang() {
+    try {
+      const huidig = await github(contentsPath(team, TOEGANG_BESTAND) + "?ref=" + encodeURIComponent(team.branch));
+      await github(contentsPath(team, TOEGANG_BESTAND), {
+        method: "DELETE",
+        body: { message: "Teamwachtwoord uitgeschakeld", sha: huidig.sha, branch: team.branch }
+      });
+    } catch (error) {
+      if (error.status !== 404) throw error;
+    }
+    toegang = null;
   }
 
   /* De drie gegevensbestanden die de pagina in de repository bijhoudt. */
@@ -2817,10 +2953,103 @@
     renderVoortgang();
   }
 
+  let teamModus = "wachtwoord"; /* welk formulier je ziet als je niet bent ingelogd: "wachtwoord" of "sleutel" */
+  let teamNaam = ""; /* de naam die iemand intikte, bewaard als het inloggen mislukt */
+  let dialogStatus = ""; /* melding bovenaan het venster na een geslaagde actie */
+
+  const foutBox = (message) => el("p", { class: "formerror", id: "team-fout", role: "alert", hidden: !message, text: message || "" });
+  const sluitKnop = (primair) =>
+    el("button", { class: primair ? "btn btn--primary" : "btn", type: "button", dataset: { act: "close" }, text: TT.sluiten });
+
+  /* Inloggen met naam en teamwachtwoord. */
+  function wachtwoordForm(message) {
+    return el(
+      "form",
+      { class: "teamform", id: "wachtwoordform", novalidate: true },
+      el(
+        "div",
+        { class: "field" },
+        el("label", { for: "team-naam", text: TT.veldNaam }),
+        el("input", { id: "team-naam", name: "naam", type: "text", maxlength: "40", autocomplete: "name", value: teamNaam || null })
+      ),
+      el(
+        "div",
+        { class: "field" },
+        el("label", { for: "team-wachtwoord", text: TT.veldWachtwoord }),
+        el("input", { id: "team-wachtwoord", name: "wachtwoord", type: "password", autocomplete: "current-password" })
+      ),
+      foutBox(message),
+      el("div", { class: "actions" }, el("button", { class: "btn btn--primary", type: "submit", text: TT.inloggen }), sluitKnop(false))
+    );
+  }
+
+  /* Inloggen met een eigen GitHub-sleutel. */
+  function sleutelForm(message) {
+    return el(
+      "form",
+      { class: "teamform", id: "teamform", novalidate: true },
+      el(
+        "div",
+        { class: "field" },
+        el("label", { for: "team-sleutel", text: TT.veldSleutel }),
+        el("input", {
+          id: "team-sleutel",
+          name: "sleutel",
+          type: "password",
+          autocomplete: "off",
+          spellcheck: "false",
+          "aria-describedby": "team-hulp"
+        }),
+        el(
+          "p",
+          { class: "hint", id: "team-hulp" },
+          TT.hulp + " ",
+          el("a", { href: "https://github.com/settings/personal-access-tokens/new", target: "_blank", rel: "noopener", text: TT.hulpLink })
+        )
+      ),
+      foutBox(message),
+      el("div", { class: "actions" }, el("button", { class: "btn btn--primary", type: "submit", text: TT.verbinden }), sluitKnop(false))
+    );
+  }
+
+  /* Alleen voor wie met een eigen sleutel is ingelogd: een teamwachtwoord instellen, vervangen of uitschakelen. */
+  function toegangBeheer(message) {
+    const kop = el("h3", { id: "team-wachtwoord-titel", text: TT.wachtwoordTitel });
+    if (!team.token.startsWith("github_pat_")) {
+      return el("section", { class: "modal__sectie", "aria-labelledby": "team-wachtwoord-titel" }, kop, el("p", { class: "hint", text: TT.wachtwoordKlassiek }));
+    }
+    return el(
+      "section",
+      { class: "modal__sectie", "aria-labelledby": "team-wachtwoord-titel" },
+      kop,
+      el("p", { class: "modal__sub", text: toegang ? TT.wachtwoordIngesteld : TT.wachtwoordNiet }),
+      el(
+        "form",
+        { class: "teamform", id: "instelform", novalidate: true },
+        el(
+          "div",
+          { class: "field" },
+          el("label", { for: "team-nieuw", text: TT.veldNieuwWachtwoord }),
+          el("input", { id: "team-nieuw", name: "wachtwoord", type: "text", autocomplete: "off", spellcheck: "false", "aria-describedby": "team-nieuw-hulp" }),
+          el("p", { class: "hint", id: "team-nieuw-hulp", text: TT.wachtwoordHulp })
+        ),
+        el("div", { class: "actions" }, el("button", { class: "btn", type: "button", dataset: { act: "genereer" }, text: TT.genereer })),
+        foutBox(message),
+        el(
+          "div",
+          { class: "actions" },
+          el("button", { class: "btn btn--primary", type: "submit", text: TT.instellen }),
+          toegang ? el("button", { class: "btn", type: "button", dataset: { act: "wachtwoord-uit" }, text: TT.uitschakelen }) : null
+        )
+      )
+    );
+  }
+
   function renderTeamDialog(message) {
     const repo = team || detectRepo();
     const repoNaam = repo ? repo.eigenaar + "/" + repo.repository : "";
     const delen = [el("h2", { id: "team-titel", tabindex: "-1", text: TT.titel })];
+    if (dialogStatus) delen.push(el("p", { class: "docs__status", role: "status", text: dialogStatus }));
 
     if (team) {
       delen.push(
@@ -2833,55 +3062,61 @@
           el("button", { class: "btn", type: "button", dataset: { act: "disconnect" }, text: TT.verbreken })
         )
       );
+      if (team.via !== "wachtwoord") delen.push(toegangBeheer(message));
     } else if (!repo) {
+      delen.push(el("p", { text: TT.geenRepository }), el("div", { class: "actions" }, sluitKnop(true)));
+    } else if (toegang === undefined) {
+      delen.push(el("p", { class: "modal__sub", role: "status", text: TT.laden }), el("div", { class: "actions" }, sluitKnop(false)));
+    } else if (toegang && teamModus === "wachtwoord") {
       delen.push(
-        el("p", { text: TT.geenRepository }),
-        el("div", { class: "actions" }, el("button", { class: "btn btn--primary", type: "button", dataset: { act: "close" }, text: TT.sluiten }))
+        el("p", { text: fill(TT.wachtwoordUitleg, { repository: repoNaam }) }),
+        wachtwoordForm(message),
+        el("button", { class: "linkbtn", type: "button", dataset: { act: "toon-sleutel" }, text: TT.liefSleutel })
       );
     } else {
       delen.push(
         el("p", { text: fill(TT.uitleg, { repository: repoNaam }) }),
-        el(
-          "form",
-          { class: "teamform", id: "teamform", novalidate: true },
-          el(
-            "div",
-            { class: "field" },
-            el("label", { for: "team-sleutel", text: TT.veldSleutel }),
-            el("input", {
-              id: "team-sleutel",
-              name: "sleutel",
-              type: "password",
-              autocomplete: "off",
-              spellcheck: "false",
-              "aria-describedby": "team-hulp"
-            }),
-            el(
-              "p",
-              { class: "hint", id: "team-hulp" },
-              TT.hulp + " ",
-              el("a", { href: "https://github.com/settings/personal-access-tokens/new", target: "_blank", rel: "noopener", text: TT.hulpLink })
-            )
-          ),
-          el("p", { class: "formerror", id: "team-fout", role: "alert", hidden: !message, text: message || "" }),
-          el(
-            "div",
-            { class: "actions" },
-            el("button", { class: "btn btn--primary", type: "submit", text: TT.verbinden }),
-            el("button", { class: "btn", type: "button", dataset: { act: "close" }, text: TT.sluiten })
-          )
-        )
+        sleutelForm(message),
+        toegang
+          ? el("button", { class: "linkbtn", type: "button", dataset: { act: "toon-wachtwoord" }, text: TT.liefWachtwoord })
+          : el("p", { class: "hint", text: TT.geenWachtwoord })
       );
     }
     teamInhoud.replaceChildren(...delen);
   }
 
   function bindTeam() {
-    teamKnop.addEventListener("click", () => {
+    const focusDialoog = () => {
+      const doel = byId("team-sleutel") || byId("team-naam") || byId("team-titel");
+      if (doel) doel.focus();
+    };
+    const toonFout = (tekst, veld) => {
+      const box = byId("team-fout");
+      box.textContent = tekst;
+      box.hidden = !tekst;
+      if (tekst && veld) veld.focus();
+    };
+    /* Na het inloggen: de pagina laat de bewerkknoppen zien en leest de nieuwste gegevens uit de repository. */
+    const ingelogd = () => {
+      teamNaam = "";
+      dialogStatus = "";
+      renderTeamState();
+      renderTeamDialog();
+      byId("team-titel").focus();
+      refreshFromRepo();
+    };
+
+    teamKnop.addEventListener("click", async () => {
+      dialogStatus = "";
+      teamModus = "wachtwoord";
+      toegang = undefined;
       renderTeamDialog();
       teamDialog.showModal();
-      const veld = byId("team-sleutel");
-      (veld || byId("team-titel")).focus();
+      byId("team-titel").focus();
+      await laadToegang();
+      if (!teamDialog.open) return;
+      renderTeamDialog();
+      focusDialoog();
     });
 
     teamDialog.addEventListener("click", (event) => {
@@ -2894,37 +3129,95 @@
       }
       const button = event.target.closest("[data-act]");
       if (!button) return;
-      if (button.dataset.act === "close") teamDialog.close();
-      if (button.dataset.act === "disconnect") {
+      const act = button.dataset.act;
+      if (act === "close") {
+        teamDialog.close();
+      } else if (act === "disconnect") {
         disconnect();
+        dialogStatus = "";
         renderTeamState();
         renderTeamDialog();
         byId("team-titel").focus();
+      } else if (act === "toon-sleutel" || act === "toon-wachtwoord") {
+        teamModus = act === "toon-sleutel" ? "sleutel" : "wachtwoord";
+        renderTeamDialog();
+        focusDialoog();
+      } else if (act === "genereer") {
+        if (!cryptoBeschikbaar()) {
+          toonFout(TT.foutCrypto);
+          return;
+        }
+        const veld = byId("team-nieuw");
+        veld.value = genereerWachtwoord();
+        toonFout("");
+        veld.focus();
+        veld.select();
+      } else if (act === "wachtwoord-uit") {
+        uitschakelen(button.closest("form"));
       }
     });
+
+    async function uitschakelen(form) {
+      setBusy(form, true, TT.bezigInstellen);
+      try {
+        await verwijderToegang();
+        dialogStatus = TT.wachtwoordUit;
+        renderTeamDialog();
+        byId("team-titel").focus();
+      } catch (error) {
+        renderTeamDialog(errorMessage(error));
+      }
+    }
 
     teamDialog.addEventListener("submit", async (event) => {
       event.preventDefault();
       const form = event.target;
-      const token = form.elements.sleutel.value.trim();
-      const fout = byId("team-fout");
-      if (!token) {
-        fout.textContent = TT.foutLeeg;
-        fout.hidden = false;
-        form.elements.sleutel.focus();
-        return;
-      }
-      fout.hidden = true;
-      setBusy(form, true, TT.bezig);
-      try {
-        await connect(token);
-        renderTeamState();
-        renderTeamDialog();
-        byId("team-titel").focus();
-        refreshFromRepo();
-      } catch (error) {
-        renderTeamDialog(errorMessage(error));
-        byId("team-sleutel").focus();
+
+      if (form.id === "teamform") {
+        const token = form.elements.sleutel.value.trim();
+        if (!token) return toonFout(TT.foutLeeg, form.elements.sleutel);
+        toonFout("");
+        setBusy(form, true, TT.bezig);
+        try {
+          await connect(token, { via: "sleutel" });
+          ingelogd();
+        } catch (error) {
+          renderTeamDialog(errorMessage(error));
+          byId("team-sleutel").focus();
+        }
+      } else if (form.id === "wachtwoordform") {
+        const naam = form.elements.naam.value.trim().replace(/\s+/g, " ");
+        const wachtwoord = form.elements.wachtwoord.value;
+        teamNaam = naam;
+        if (!naam) return toonFout(TT.foutNaam, form.elements.naam);
+        if (!wachtwoord) return toonFout(TT.foutLeegWachtwoord, form.elements.wachtwoord);
+        toonFout("");
+        setBusy(form, true, TT.bezigInloggen);
+        try {
+          const token = await ontsleutel(toegang, wachtwoord);
+          try {
+            await connect(token, { naam, via: "wachtwoord" });
+          } catch (error) {
+            throw error.status === 401 ? coded("foutToegangVerlopen") : error;
+          }
+          ingelogd();
+        } catch (error) {
+          renderTeamDialog(errorMessage(error));
+          byId("team-wachtwoord").focus();
+        }
+      } else if (form.id === "instelform") {
+        const wachtwoord = form.elements.wachtwoord.value;
+        if (!wachtwoordSterkGenoeg(wachtwoord)) return toonFout(TT.foutZwak, form.elements.wachtwoord);
+        toonFout("");
+        setBusy(form, true, TT.bezigInstellen);
+        try {
+          await schrijfToegang(await versleutel(team.token, wachtwoord));
+          dialogStatus = TT.wachtwoordKlaar;
+          renderTeamDialog();
+          byId("team-titel").focus();
+        } catch (error) {
+          renderTeamDialog(errorMessage(error));
+        }
       }
     });
 
