@@ -71,7 +71,6 @@
   let skyTimer = 0;
 
   let documenten = Array.isArray(window.STAKEHOLDERMAP_DOCUMENTEN) ? window.STAKEHOLDERMAP_DOCUMENTEN.slice() : [];
-  const sessieLinks = new Map();
   let team = null;
   let docFormOpen = false;
   let docStatus = "";
@@ -452,7 +451,7 @@
 
   function docHref(doc) {
     if (doc.soort === "link") return /^https?:\/\//i.test(doc.url || "") ? doc.url : null;
-    return sessieLinks.get(doc.id) || doc.pad || null;
+    return doc.pad || null;
   }
 
   function docKind(doc) {
@@ -2658,16 +2657,14 @@
       if (documenten.some((d) => d.pad === pad)) pad = withSuffix(pad, uid());
       const content = await fileToBase64(input.file);
       const message = "Document toegevoegd: " + input.titel;
-      let result;
       try {
-        result = await github(contentsPath(team, pad), { method: "PUT", body: { message, content, branch: team.branch } });
+        await github(contentsPath(team, pad), { method: "PUT", body: { message, content, branch: team.branch } });
       } catch (error) {
         if (error.status !== 422) throw error;
         pad = withSuffix(pad, uid());
-        result = await github(contentsPath(team, pad), { method: "PUT", body: { message, content, branch: team.branch } });
+        await github(contentsPath(team, pad), { method: "PUT", body: { message, content, branch: team.branch } });
       }
       entry.pad = pad;
-      if (result && result.content && result.content.html_url) sessieLinks.set(entry.id, result.content.html_url);
     } else {
       entry.url = input.url;
     }
