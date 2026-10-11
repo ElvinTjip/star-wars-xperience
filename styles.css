@@ -1283,6 +1283,24 @@ a.doc__link:hover .doc__titel {
   color: var(--text-2);
 }
 
+/* Waaraan nu gewerkt wordt, in geel: ook te zien voordat je de planeet opent */
+.planet__bezig {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--bezig);
+}
+
+.planet__bezig .icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
 .planetview {
   padding: var(--s-lg) var(--s-md) var(--s-xl);
   scroll-margin-top: var(--s-md);
@@ -1743,6 +1761,11 @@ a.doc__link:hover .doc__titel {
   flex: none;
   height: 100%;
   background: var(--ice);
+}
+
+/* Wat bezig is: gele streepjes in plaats van een vol vlak, zodat het niet voor af doorgaat */
+.progress__fill.is-bezig {
+  background: repeating-linear-gradient(90deg, var(--bezig) 0 4px, transparent 4px 7px);
 }
 
 .progress__text {

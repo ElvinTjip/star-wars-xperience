@@ -1301,22 +1301,48 @@
     );
   }
 
-  /* De ring om een planeet in die delen, met een smalle opening ertussen als er meer dan één kleur is. */
+  /* Op de sterrenkaart, in geel onder de naam: waaraan nu gewerkt wordt, ook voordat je de planeet opent. */
+  function bezigRegel(p) {
+    if (!p.bezig) return null;
+    return el(
+      "span",
+      { class: "planet__bezig" },
+      icon("bezig"),
+      el("span", { text: p.bezig === 1 ? V.bezigEen : fill(V.bezigMeer, { aantal: p.bezig }) })
+    );
+  }
+
+  /* De ring om een planeet in die delen, met een smalle opening ertussen als er meer dan één kleur is.
+     Wat bezig is volgt als een gestippelde gele boog: zo leest het als "onderweg" en niet als "af". */
   function ringSvg(p) {
     const delen = voortgangDelen(p);
     const gat = delen.length > 1 ? 1.2 : 0;
     let start = 0;
-    return delen
-      .map((deel) => {
-        const lengte = Math.max(deel.deel - gat, 0.4);
-        const circle =
-          '<circle class="planet__ring" cx="70" cy="70" r="64" pathLength="100" stroke="' + deel.kleur +
-          '" stroke-dasharray="' + lengte.toFixed(2) + ' 100" stroke-dashoffset="' + (-(start + gat / 2)).toFixed(2) +
-          '" transform="rotate(-90 70 70)"' + (delen.length === 1 ? ' stroke-linecap="round"' : "") + "/>";
-        start += deel.deel;
-        return circle;
-      })
-      .join("");
+    const ringen = delen.map((deel) => {
+      const lengte = Math.max(deel.deel - gat, 0.4);
+      const circle =
+        '<circle class="planet__ring" cx="70" cy="70" r="64" pathLength="100" stroke="' + deel.kleur +
+        '" stroke-dasharray="' + lengte.toFixed(2) + ' 100" stroke-dashoffset="' + (-(start + gat / 2)).toFixed(2) +
+        '" transform="rotate(-90 70 70)"' + (delen.length === 1 ? ' stroke-linecap="round"' : "") + "/>";
+      start += deel.deel;
+      return circle;
+    });
+
+    /* De bezige manen: even lange streepjes met een gelijk tussenstuk, over het deel van de ring dat bij hen hoort. */
+    if (p.bezig && p.totaal) {
+      const lengte = (p.bezig / p.totaal) * 100;
+      const streep = 1.6;
+      const stap = 3;
+      const aantal = Math.max(1, Math.floor((lengte - streep) / stap) + 1);
+      for (let i = 0; i < aantal; i++) {
+        ringen.push(
+          '<circle class="planet__ring is-bezig" cx="70" cy="70" r="64" pathLength="100" stroke="' + BEZIG_KLEUR +
+          '" stroke-dasharray="' + streep + ' 100" stroke-dashoffset="' + (-(start + (delen.length ? gat : 0) + i * stap)).toFixed(2) +
+          '" transform="rotate(-90 70 70)"/>'
+        );
+      }
+    }
+    return ringen.join("");
   }
 
   function planetSvg(index, p, onderdeel) {
@@ -1454,7 +1480,8 @@
           "span",
           { class: "planet__label" },
           el("span", { class: "planet__naam", text: onderdeel.naam }),
-          el("span", { class: "planet__status", text: status })
+          el("span", { class: "planet__status", text: status }),
+          bezigRegel(p)
         )
       );
     });
@@ -2107,7 +2134,9 @@
             "aria-valuenow": String(p.klaar),
             "aria-valuetext": telling
           },
-          voortgangDelen(p).map((deel) => el("span", { class: "progress__fill", style: "width:" + deel.deel.toFixed(2) + "%;background:" + deel.kleur }))
+          voortgangDelen(p)
+            .map((deel) => el("span", { class: "progress__fill", style: "width:" + deel.deel.toFixed(2) + "%;background:" + deel.kleur }))
+            .concat(p.bezig ? [el("span", { class: "progress__fill is-bezig", style: "width:" + ((p.bezig / p.totaal) * 100).toFixed(2) + "%" })] : [])
         ),
         el("p", { class: "progress__text", text: telling }),
         aandeelEl(p)
