@@ -71,6 +71,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "titel": "Tussentijdse Pitch",
         "klaar": false,
         "beeld": "alderaan"
+      },
+      {
+        "id": "mv3xl7rwp1yu5",
+        "titel": "EindPitch",
+        "klaar": false,
+        "beeld": "chandrila"
       }
     ]
   }
