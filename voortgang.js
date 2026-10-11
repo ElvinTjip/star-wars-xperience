@@ -39,7 +39,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "lasergame",
         "titel": "Lasergame",
-        "klaar": false,
+        "klaar": true,
         "beeld": "dathomir",
         "media": [
           {
@@ -54,6 +54,9 @@ window.STAKEHOLDERMAP_VOORTGANG = {
             "bestand": "video/lasergame-opname.mp4",
             "poster": "video/lasergame-opname.jpg"
           }
+        ],
+        "mensen": [
+          "elvin"
         ]
       }
     ]
