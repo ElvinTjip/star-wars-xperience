@@ -1,0 +1,8 @@
+{
+  "versie": 1,
+  "kdf": "PBKDF2-SHA256",
+  "iteraties": 600000,
+  "zout": "fW3cOKWDb09f/mqXglF7fg==",
+  "iv": "L/8V903JJ4b1PFbl",
+  "versleuteld": "zv4WJUlaTMjx/0b4P5yzS4hLYN/Qmyhz45O0QTD/ihb5wGGOUnxB8xvwDYbIUg1P2KyUSE2Yk20lDtmRvag15gDgarXg8tfanCbm+iQcj99+p4Xmdx82MLKq83TfboiI4lT7xB9gIZMPZnBgcg=="
+}
