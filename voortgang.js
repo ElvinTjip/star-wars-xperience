@@ -39,7 +39,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "lasergame",
         "titel": "Lasergame",
-        "klaar": false,
+        "klaar": true,
         "beeld": "dathomir",
         "media": [
           {
@@ -59,8 +59,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
           "elvin",
           "stan",
           "coen"
-        ],
-        "bezig": true
+        ]
       }
     ]
   }
