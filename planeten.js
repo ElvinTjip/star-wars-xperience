@@ -50,5 +50,15 @@ window.STAKEHOLDERMAP_PLANETEN = [
       "doelgroep",
       "testpubliek"
     ]
+  },
+  {
+    "id": "pitch",
+    "naam": "Pitch",
+    "planeet": "geonosis",
+    "stakeholders": [
+      "docenten-coach",
+      "mark-vernon",
+      "projectgroep"
+    ]
   }
 ];
