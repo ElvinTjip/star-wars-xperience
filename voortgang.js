@@ -26,7 +26,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "best-practice",
         "titel": "Best practice",
-        "klaar": true,
+        "klaar": false,
         "beeld": "bespin"
       }
     ]
