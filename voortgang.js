@@ -63,5 +63,15 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "bezig": true
       }
     ]
+  },
+  "pitch": {
+    "manen": [
+      {
+        "id": "mv3xkziej7hgt",
+        "titel": "Tussentijdse Pitch",
+        "klaar": false,
+        "beeld": "alderaan"
+      }
+    ]
   }
 };
