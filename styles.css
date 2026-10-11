@@ -51,6 +51,7 @@
   --grid: rgba(128, 176, 224, 0.1);
   --surface: rgba(6, 12, 24, 0.95);
   --danger: #ff9c9c;
+  --bezig: #ffe14a; /* de pagina zet de waarde uit data.js (bezigKleur) erbovenop */
 
   /* Spacing op een basis van 4px */
   --s-xxs: 4px;
@@ -1512,6 +1513,33 @@ a.doc__link:hover .doc__titel {
   stroke-dasharray: none;
 }
 
+/* Bezig: geel, de kleur is nog niet af maar er wordt aan gewerkt. */
+.moon[data-status="bezig"] .moon__image {
+  opacity: 0.85;
+  filter: grayscale(0.15);
+}
+
+.moon__ring.is-bezig {
+  stroke: var(--bezig);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+
+.moon[data-status="bezig"] .moon__rim {
+  stroke: var(--bezig);
+}
+
+/* Af, met opgegeven mensen: de ring in hun kleuren, elk een deel (de kleuren staan op de boog zelf). */
+.moon__arc {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.moon__dots circle {
+  stroke: #06101f;
+  stroke-width: 1.2;
+}
+
 .moon__rim {
   fill: none;
   stroke: var(--line-strong);
@@ -1604,8 +1632,14 @@ a.doc__link:hover .doc__titel {
   clip-path: circle(35.9% at 50% 50%);
 }
 
-.moonview__afvinken {
+.moonview__beheer {
+  display: grid;
+  gap: var(--s-md);
   margin-top: var(--s-md);
+}
+
+.moonview__beheer .picker__checks {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 120px), 1fr));
 }
 
 @media (min-width: 640px) {
@@ -1754,6 +1788,50 @@ a.doc__link:hover .doc__titel {
 
 .moonrow[data-klaar="true"] .moonrow__status {
   color: var(--text-2);
+}
+
+.moonrow[data-status="bezig"] > .icon,
+.moonrow[data-status="bezig"] .moonrow__status,
+.planetview__status[data-status="bezig"] {
+  color: var(--bezig);
+}
+
+/* Wie eraan werkt: een gekleurd rondje met de naam ernaast */
+.crew {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--s-sm);
+}
+
+.crew__lid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.crew__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-xxs) var(--s-sm);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+.check .crew__dot {
+  margin-left: calc(-1 * var(--s-xxs));
 }
 
 .check {
@@ -1981,6 +2059,10 @@ a.doc__link:hover .doc__titel {
   line-height: 1.3;
   cursor: pointer;
   transition: color 0.18s, border-color 0.18s, background-color 0.18s;
+}
+
+a.btn {
+  text-decoration: none;
 }
 
 .btn:hover {
@@ -2245,6 +2327,110 @@ a.doc__link:hover .doc__titel {
 
 .modal .linkbtn {
   justify-self: start;
+}
+
+/* Een bestand bekijken in de pagina zelf */
+.viewer {
+  width: min(1100px, calc(100% - 2 * var(--s-md)));
+  max-width: none;
+  height: min(900px, calc(100dvh - 2 * var(--s-md)));
+  max-height: none;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.viewer[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.viewer::backdrop {
+  background: rgba(2, 6, 14, 0.72);
+}
+
+.viewer__kop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-sm) var(--s-lg);
+  padding: var(--s-md) var(--s-lg);
+  border-bottom: 1px solid var(--line);
+}
+
+.viewer__tekst {
+  min-width: 0;
+}
+
+.viewer h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ice);
+  overflow-wrap: anywhere;
+  outline: none;
+}
+
+.viewer__meta {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+
+.viewer__acties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-xs);
+}
+
+.viewer__inhoud {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: auto;
+  background: var(--space-deep);
+}
+
+.viewer__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.viewer__hint {
+  padding: var(--s-xs) var(--s-lg);
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+
+.viewer__beeld,
+.viewer__video {
+  place-self: center;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.viewer__audio {
+  place-self: center;
+  width: min(100% - 2 * var(--s-lg), 480px);
+}
+
+.viewer__geen {
+  display: grid;
+  place-content: center;
+  justify-items: start;
+  gap: var(--s-md);
+  padding: var(--s-xl);
+  color: var(--text-2);
 }
 
 .modal .actions {

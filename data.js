@@ -31,6 +31,18 @@ window.STAKEHOLDERMAP = {
   },
 
   /*
+    Het team en zijn kleuren. Een maan die bezig is, is geel (bezigKleur). Een maan die af is
+    krijgt de kleur van iedereen die eraan werkte: bij één persoon één kleur, bij twee of drie
+    personen elk een deel van de ring. In de editor geef je per maan op wie eraan werkt.
+  */
+  teamleden: [
+    { id: "elvin", naam: "Elvin", kleur: "#b983ff" },
+    { id: "stan", naam: "Stan", kleur: "#5b7bff" },
+    { id: "coen", naam: "Coen", kleur: "#4fe39a" }
+  ],
+  bezigKleur: "#ffe14a",
+
+  /*
     Beelden. "uitsnede" is het deel van het plaatje dat getoond wordt:
     [links, boven, rechts, onder] in pixels. Laat "uitsnede" weg om het hele
     plaatje te tonen, of haal een regel weg om dat beeld niet te gebruiken.
@@ -295,7 +307,12 @@ window.STAKEHOLDERMAP = {
       foutTitel: "Geef het document een titel.",
       foutBestand: "Kies een bestand.",
       foutGroot: "Dit bestand is groter dan 25 MB. Zet het elders en voeg een link toe.",
-      foutLink: "Vul een link in die begint met https://."
+      foutLink: "Vul een link in die begint met https://.",
+      openTab: "Openen in nieuw tabblad",
+      downloaden: "Downloaden",
+      viewerHint: "Zie je niets? Open het bestand dan in een nieuw tabblad.",
+      viewerGeen: "Dit soort bestand kan niet in de pagina worden getoond. Open of download het hieronder.",
+      viewerSluiten: "Sluiten"
     },
 
     voortgang: {
@@ -355,7 +372,16 @@ window.STAKEHOLDERMAP = {
       foutPlaneetNaam: "Geef de planeet een naam.",
       foutPlaneetLetters: "Gebruik letters of cijfers in de naam.",
       foutPlaneetBestaat: "Er is al een planeet met deze naam.",
-      foutPlaneetWeg: "Deze planeet bestaat niet meer. Misschien heeft een teamgenoot hem verwijderd."
+      foutPlaneetWeg: "Deze planeet bestaat niet meer. Misschien heeft een teamgenoot hem verwijderd.",
+
+      statusTitel: "Status",
+      statusOpen: "Nog te doen",
+      statusBezig: "Bezig",
+      statusKlaar: "Af",
+      wieTitel: "Wie werkt eraan?",
+      wieHulp: "Een maan die af is, krijgt de kleur van iedereen die je hier aanvinkt.",
+      door: "Door {namen}",
+      legenda: "Geel is bezig. Een afgeronde maan heeft de kleur van wie eraan werkte:"
     },
 
     team: {

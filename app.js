@@ -22,6 +22,7 @@
   const kwadrantById = new Map(data.kwadranten.map((k) => [k.id, k]));
   const stakeholderById = new Map(data.stakeholders.map((s) => [s.id, s]));
   const planById = new Map(data.plan.rijen.map((r) => [r.id, r]));
+  const teamleden = data.teamleden || [];
 
   /* index.html is voor bezoekers en alleen om te lezen; editor.html is voor het team en kan bewerken. */
   const EDITOR = document.body.dataset.modus === "editor";
@@ -143,7 +144,9 @@
     check:
       '<svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m5.25 8.25 2 2 3.5-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     todo:
-      '<svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.5 2.5"/></svg>'
+      '<svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.5 2.5"/></svg>',
+    bezig:
+      '<svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/></svg>'
   };
 
   const icon = (name) => svg(ICONS[name]);
@@ -481,7 +484,14 @@
     const meta = [docKind(doc), !compact && datum && fill(T.toegevoegd, { datum })].filter(Boolean).join(", ");
     return el(
       href ? "a" : "span",
-      { class: "doc__link", href, target: href && "_blank", rel: href && "noopener" },
+      {
+        class: "doc__link",
+        href,
+        target: href && "_blank",
+        rel: href && "noopener",
+        /* Een bestand opent in de pagina zelf (zie openViewer); een gewone klik met Ctrl of Shift opent het nog in een tabblad. */
+        dataset: doc.soort === "bestand" && doc.pad ? { viewer: doc.id } : null
+      },
       icon(doc.soort === "link" ? "link" : "document"),
       el(
         "span",
@@ -504,6 +514,94 @@
         badge.append(el("span", { class: "visually-hidden", text: ", " + countLabel(aantal) }));
       }
     }
+  }
+
+  /* ---------- Een bestand bekijken in de pagina zelf ---------- */
+
+  let viewer = null;
+  let viewerTrigger = null;
+  /* Een open venster (inloggen of bestand) vangt Escape zelf op; de rest van de pagina laat het dan met rust. */
+  const modalOpen = () => Boolean((teamDialog && teamDialog.open) || (viewer && viewer.open));
+
+  const BEELD_EXT = ["png", "jpg", "jpeg", "gif", "webp", "svg", "avif"];
+  const VIDEO_EXT = ["mp4", "webm", "mov", "m4v"];
+  const AUDIO_EXT = ["mp3", "wav", "m4a", "ogg"];
+  /* Geen html: een geüpload html-bestand zou in de pagina zelf scripts kunnen draaien. */
+  const FRAME_EXT = ["pdf", "txt", "md", "csv", "json"];
+
+  function viewerBody(doc) {
+    const ext = ((/\.([a-z0-9]{1,5})$/i.exec(doc.pad || "") || [])[1] || "").toLowerCase();
+    const src = doc.pad;
+    if (BEELD_EXT.includes(ext)) return [el("img", { class: "viewer__beeld", src, alt: doc.titel })];
+    if (VIDEO_EXT.includes(ext)) return [el("video", { class: "viewer__video", src, controls: true, preload: "metadata" })];
+    if (AUDIO_EXT.includes(ext)) return [el("audio", { class: "viewer__audio", src, controls: true, preload: "metadata" })];
+    if (FRAME_EXT.includes(ext)) {
+      return [el("iframe", { class: "viewer__frame", src, title: doc.titel }), el("p", { class: "viewer__hint", text: T.viewerHint })];
+    }
+    return [el("div", { class: "viewer__geen" }, el("p", { text: T.viewerGeen }), el("a", { class: "btn", href: src, download: "", text: T.downloaden }))];
+  }
+
+  function buildViewer() {
+    viewer = el(
+      "dialog",
+      { class: "viewer", id: "viewer", "aria-labelledby": "viewer-titel" },
+      el(
+        "div",
+        { class: "viewer__kop" },
+        el(
+          "div",
+          { class: "viewer__tekst" },
+          el("h2", { id: "viewer-titel", tabindex: "-1" }),
+          el("p", { class: "viewer__meta", id: "viewer-meta" })
+        ),
+        el(
+          "div",
+          { class: "viewer__acties" },
+          el("a", { class: "btn", id: "viewer-tab", target: "_blank", rel: "noopener", text: T.openTab }),
+          el("button", { class: "btn btn--primary", type: "button", dataset: { act: "viewer-close" }, text: T.viewerSluiten })
+        )
+      ),
+      el("div", { class: "viewer__inhoud", id: "viewer-inhoud" })
+    );
+    document.body.append(viewer);
+    viewer.addEventListener("click", (event) => {
+      if (event.target.closest('[data-act="viewer-close"]')) viewer.close();
+      else if (event.target === viewer) {
+        const box = viewer.getBoundingClientRect();
+        const binnen = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+        if (!binnen) viewer.close();
+      }
+    });
+    /* Bij het sluiten leeg maken, zodat een video of audio stopt, en de focus terug naar de link waar je vandaan kwam. */
+    viewer.addEventListener("close", () => {
+      byId("viewer-inhoud").replaceChildren();
+      if (viewerTrigger && document.contains(viewerTrigger)) viewerTrigger.focus();
+      viewerTrigger = null;
+    });
+  }
+
+  function openViewer(doc, trigger) {
+    if (!viewer) buildViewer();
+    viewerTrigger = trigger;
+    const datum = formatDate(doc.toegevoegd);
+    byId("viewer-titel").textContent = doc.titel;
+    byId("viewer-meta").textContent = [docKind(doc), datum && fill(T.toegevoegd, { datum })].filter(Boolean).join(", ");
+    byId("viewer-tab").setAttribute("href", doc.pad);
+    byId("viewer-inhoud").replaceChildren(...viewerBody(doc));
+    viewer.showModal();
+    byId("viewer-titel").focus();
+  }
+
+  function bindViewer() {
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest("a[data-viewer]");
+      /* Met Ctrl, Shift, Alt, Cmd of de middelste knop opent het gewoon in een tabblad. */
+      if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const doc = documenten.find((d) => d.id === link.dataset.viewer);
+      if (!doc || !doc.pad) return;
+      event.preventDefault();
+      openViewer(doc, link);
+    });
   }
 
   /* De bediening van een lijst met documenten: dezelfde voor een stakeholder en voor een maan. */
@@ -941,7 +1039,7 @@
     });
 
     document.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape" || !dialog.open || (teamDialog && teamDialog.open)) return;
+      if (event.key !== "Escape" || !dialog.open || modalOpen()) return;
       if (dialog.matches(":modal")) return;
       escapeDetail();
     });
@@ -1067,13 +1165,91 @@
   function planetProgress(id) {
     const item = voortgang[id] || {};
     const manen = (item.manen || item.stappen || []).filter((maan) => maan && maan.id && maan.titel);
-    return { manen, klaar: manen.filter((maan) => maan.klaar).length, totaal: manen.length };
+    return {
+      manen,
+      klaar: manen.filter((maan) => maan.klaar).length,
+      bezig: manen.filter((maan) => !maan.klaar && maan.bezig).length,
+      totaal: manen.length
+    };
   }
 
+  /* Een planeet is bezig zodra een maan bezig of af is. */
   function statusLabel(p) {
     if (!p.totaal) return V.geenManen;
-    if (!p.klaar) return V.nietGestart;
+    if (!p.klaar && !p.bezig) return V.nietGestart;
     return p.klaar === p.totaal ? V.afgerond : V.bezig;
+  }
+
+  /* ---------- Status en teamkleuren van een maan ---------- */
+
+  /* Nog te doen (gedimd), bezig (geel) of af (in de kleur van wie eraan werkte). */
+  const maanStatus = (maan) => (maan.klaar ? "klaar" : maan.bezig ? "bezig" : "open");
+  const statusTekst = (maan) => ({ klaar: V.klaar, bezig: V.bezig, open: V.open })[maanStatus(maan)];
+  const maanMensen = (maan) => teamleden.filter((lid) => (maan.mensen || []).includes(lid.id));
+  const BEZIG_KLEUR = data.bezigKleur || "#ffe14a";
+  document.documentElement.style.setProperty("--bezig", BEZIG_KLEUR);
+
+  function opsomming(namen) {
+    return namen.length < 2 ? namen.join("") : namen.slice(0, -1).join(", ") + " en " + namen[namen.length - 1];
+  }
+
+  /* Het teamlid achter de inlognaam: "Stan" of "ElvinTjip" is Stan of Elvin. */
+  function eigenTeamlid() {
+    const naam = String((team && team.login) || "").toLowerCase();
+    return (naam && teamleden.find((lid) => naam.startsWith(lid.naam.toLowerCase()))) || null;
+  }
+
+  /* Een maan met een nieuwe status; wie nog niemand opgaf, geeft zichzelf op zodra het onderdeel start. */
+  function metStatus(maan, status) {
+    const volgende = Object.assign({}, maan, { klaar: status === "klaar", bezig: status === "bezig" });
+    const ik = eigenTeamlid();
+    if (status !== "open" && ik && !(maan.mensen || []).length) volgende.mensen = [ik.id];
+    return opgeruimd(volgende);
+  }
+
+  function opgeruimd(maan) {
+    if (!maan.bezig) delete maan.bezig;
+    if (!maan.mensen || !maan.mensen.length) delete maan.mensen;
+    return maan;
+  }
+
+  /* De mensen bij een maan: een gekleurd rondje en de naam, want kleur alleen is niet genoeg. */
+  function crewEl(maan) {
+    const mensen = maanMensen(maan);
+    if (!mensen.length) return null;
+    return el(
+      "span",
+      { class: "crew" },
+      mensen.map((lid) =>
+        el(
+          "span",
+          { class: "crew__lid" },
+          el("span", { class: "crew__dot", style: "background:" + lid.kleur, "aria-hidden": "true" }),
+          el("span", { text: lid.naam })
+        )
+      )
+    );
+  }
+
+  /* Uitleg van de kleuren onder de lijst met manen. */
+  function legendaEl() {
+    return el(
+      "p",
+      { class: "legenda" },
+      el("span", { text: V.legenda }),
+      el(
+        "span",
+        { class: "crew" },
+        teamleden.map((lid) =>
+          el(
+            "span",
+            { class: "crew__lid" },
+            el("span", { class: "crew__dot", style: "background:" + lid.kleur, "aria-hidden": "true" }),
+            el("span", { text: lid.naam })
+          )
+        )
+      )
+    );
   }
 
   const PLANET_DIR = "beeld/planeten/";
@@ -1546,7 +1722,40 @@
     return pool.find((naam) => !bezet.has(naam)) || pool[manen.length % pool.length];
   }
 
-  /* Een maan: een kleine planeet die gedimd is zolang het onderdeel niet af is, en oplicht met een vinkje als het af is. */
+  /* De ring om een maan. Nog te doen: gestippeld. Bezig: geel. Af: in de kleur van wie eraan werkte, bij twee of drie
+     personen elk een gelijk deel van de ring; zonder opgegeven personen ijswit. */
+  function moonRing(maan) {
+    const status = maanStatus(maan);
+    const kleuren = status === "klaar" ? maanMensen(maan).map((lid) => lid.kleur) : [];
+    if (!kleuren.length) {
+      return '<circle class="moon__ring' + (status === "bezig" ? " is-bezig" : "") + '" cx="32" cy="32" r="29.5"/>';
+    }
+    const stuk = 100 / kleuren.length;
+    const gat = kleuren.length > 1 ? 2 : 0;
+    return kleuren
+      .map(
+        (kleur, i) =>
+          '<circle class="moon__arc" cx="32" cy="32" r="29.5" pathLength="100" transform="rotate(-90 32 32)" stroke="' + kleur +
+          '" stroke-dasharray="' + (stuk - gat).toFixed(2) + ' 100" stroke-dashoffset="' + (-(i * stuk + gat / 2)).toFixed(2) + '"/>'
+      )
+      .join("");
+  }
+
+  /* Wie eraan werkt, zolang de maan nog niet af is: kleine rondjes rechtsonder, waar bij een afgeronde maan het vinkje staat. */
+  function moonDots(maan) {
+    const mensen = maan.klaar ? [] : maanMensen(maan);
+    if (!mensen.length) return "";
+    return (
+      '<g class="moon__dots">' +
+      mensen
+        .map((lid, i) => '<circle cx="' + (50 + (i - (mensen.length - 1) / 2) * 7.5).toFixed(1) + '" cy="51" r="3.4" fill="' + lid.kleur + '"/>')
+        .join("") +
+      "</g>"
+    );
+  }
+
+  /* Een maan: een kleine planeet die gedimd is zolang het onderdeel niet af is, geel is als het bezig is, en oplicht met
+     een vinkje en de kleuren van het team als het af is. */
   function moonSvg(maan, index) {
     const beeld = moonImage(maan, index);
     const id = "maan-" + svgCount++;
@@ -1556,7 +1765,7 @@
         '<clipPath id="' + id + '-rond"><circle cx="32" cy="32" r="23"/></clipPath>' +
         '<pattern id="' + id + '-scan" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="1" fill="rgba(214,236,255,0.16)"/></pattern>' +
         "</defs>" +
-        '<circle class="moon__ring" cx="32" cy="32" r="29.5"/>' +
+        moonRing(maan) +
         '<circle cx="32" cy="32" r="23" fill="#0b1830"/>' +
         (beeld
           ? '<image class="moon__image" x="9" y="9" width="46" height="46" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + id + '-rond)"/>'
@@ -1564,10 +1773,17 @@
         '<circle cx="32" cy="32" r="23" fill="url(#' + id + '-scan)"/>' +
         '<circle class="moon__rim" cx="32" cy="32" r="23"/>' +
         (maan.klaar ? '<g class="moon__check"><circle cx="50" cy="50" r="9"/><path d="m45.6 50.2 3 3 5.2-6"/></g>' : "") +
+        moonDots(maan) +
         "</svg>"
     );
     if (beeld) node.querySelector("image").setAttribute("href", PLANET_DIR + encodeURIComponent(beeld) + ".png");
     return node;
+  }
+
+  /* Voor hulpsoftware: de status en wie eraan werkt, in woorden. */
+  function moonSpeech(maan) {
+    const namen = maanMensen(maan).map((lid) => lid.naam);
+    return statusTekst(maan) + (namen.length ? ", " + fill(V.door, { namen: opsomming(namen) }) : "");
   }
 
   /* Een naam met een lang woord staat in de smalle snede, zodat het woord heel blijft. */
@@ -1600,7 +1816,7 @@
         "li",
         {
           class: "moon" + (cy < -0.01 ? " is-up" : "") + (maan.id === newMoonId ? " is-new" : ""),
-          dataset: { id: maan.id, klaar: String(Boolean(maan.klaar)) },
+          dataset: { id: maan.id, klaar: String(Boolean(maan.klaar)), status: maanStatus(maan) },
           style: "--cx:" + cx.toFixed(4) + ";--cy:" + cy.toFixed(4) + ";--ax:" + Math.abs(cx).toFixed(4) + ";--i:" + i
         },
         el(
@@ -1612,7 +1828,7 @@
           },
           el("span", { class: "moon__beeld" }, moonSvg(maan, i)),
           el("span", { class: "moon__naam" + (langWoord(maan.titel) ? " is-lang" : ""), text: maan.titel }),
-          el("span", { class: "visually-hidden", text: ", " + (maan.klaar ? V.klaar : V.open) })
+          el("span", { class: "visually-hidden", text: ", " + moonSpeech(maan) })
         )
       );
     });
@@ -1641,15 +1857,16 @@
   function moonRow(maan) {
     const attrs = {
       class: "moonrow",
-      dataset: { id: maan.id, klaar: String(Boolean(maan.klaar)) }
+      dataset: { id: maan.id, klaar: String(Boolean(maan.klaar)), status: maanStatus(maan) }
     };
     if (!team) {
       return el(
         "li",
         attrs,
-        icon(maan.klaar ? "check" : "todo"),
+        icon({ klaar: "check", bezig: "bezig", open: "todo" }[maanStatus(maan)]),
         el("span", { class: "moonrow__titel", text: maan.titel }),
-        el("span", { class: "moonrow__status", text: maan.klaar ? V.klaar : V.open })
+        crewEl(maan),
+        el("span", { class: "moonrow__status", text: statusTekst(maan) })
       );
     }
     if (moonRemoveId === maan.id) {
@@ -1666,6 +1883,8 @@
         el("span", { class: "moonrow__titel", text: maan.titel }),
         el("span", { class: "visually-hidden", text: ", " + V.klaar })
       ),
+      crewEl(maan),
+      statusPil(maan),
       el(
         "button",
         {
@@ -1677,6 +1896,11 @@
         icon("trash")
       )
     );
+  }
+
+  /* In de lijst, voor het team: alleen als de maan bezig is staat er "Bezig" bij, want het vakje kent maar af of niet af. */
+  function statusPil(maan) {
+    return maanStatus(maan) === "bezig" ? el("span", { class: "moonrow__status", text: V.bezig }) : null;
   }
 
   /* Eerst vragen: een maan verwijderen haalt ook de documenten weg die eraan hangen. */
@@ -1833,7 +2057,7 @@
     }
 
     const manenDelen = [el("h3", { id: "planeet-manen", text: V.titel })];
-    if (p.totaal) manenDelen.push(el("ul", { class: "moonlist" }, p.manen.map(moonRow)));
+    if (p.totaal) manenDelen.push(el("ul", { class: "moonlist" }, p.manen.map(moonRow)), legendaEl());
     else manenDelen.push(el("p", { class: "docs__leeg", text: V.leeg }));
     if (stepError) manenDelen.push(el("p", { class: "formerror", role: "alert", text: stepError }));
     if (team) {
@@ -1912,6 +2136,48 @@
     vak.replaceChildren(...delen);
   }
 
+  /* Voor het team, bij een maan van dichtbij: de status en wie eraan werkt. */
+  function moonControls(maan) {
+    const status = maanStatus(maan);
+    const keuze = (waarde, label) =>
+      el(
+        "label",
+        { class: "seg__item" },
+        el("input", { type: "radio", name: "maan-status", value: waarde, checked: status === waarde, dataset: { act: "moon-status", id: maan.id } }),
+        el("span", { text: label })
+      );
+    return el(
+      "div",
+      { class: "moonview__beheer" },
+      el(
+        "fieldset",
+        { class: "picker" },
+        el("legend", { text: V.statusTitel }),
+        el("div", { class: "seg", role: "radiogroup", "aria-label": V.statusTitel }, keuze("open", V.statusOpen), keuze("bezig", V.statusBezig), keuze("klaar", V.statusKlaar))
+      ),
+      el(
+        "fieldset",
+        { class: "picker", "aria-describedby": "maan-wie-hulp" },
+        el("legend", { text: V.wieTitel }),
+        el("p", { class: "hint", id: "maan-wie-hulp", text: V.wieHulp }),
+        el(
+          "div",
+          { class: "picker__checks" },
+          teamleden.map((lid) =>
+            el(
+              "label",
+              { class: "check" },
+              el("input", { type: "checkbox", checked: (maan.mensen || []).includes(lid.id), dataset: { act: "moon-mensen", id: maan.id, lid: lid.id } }),
+              el("span", { class: "check__box", "aria-hidden": "true" }),
+              el("span", { class: "crew__dot", style: "background:" + lid.kleur, "aria-hidden": "true" }),
+              el("span", { text: lid.naam })
+            )
+          )
+        )
+      )
+    );
+  }
+
   function renderMoonView() {
     const onderdeel = onderdeelById.get(currentPlanet);
     const p = planetProgress(currentPlanet);
@@ -1922,24 +2188,11 @@
 
     const kop = [
       el("h2", { id: "maan-naam", tabindex: "-1", text: maan.titel }),
-      el("p", { class: "planetview__status", text: maan.klaar ? V.klaar : V.open }),
+      el("p", { class: "planetview__status", dataset: { status: maanStatus(maan) }, text: statusTekst(maan) }),
+      crewEl(maan),
       el("p", { class: "progress__text", text: fill(V.maanVan, { planeet: onderdeel.naam }) })
     ];
-    if (team) {
-      kop.push(
-        el(
-          "div",
-          { class: "moonview__afvinken" },
-          el(
-            "label",
-            { class: "check" },
-            el("input", { type: "checkbox", checked: Boolean(maan.klaar), dataset: { act: "toggle-moon", id: maan.id } }),
-            el("span", { class: "check__box", "aria-hidden": "true" }),
-            el("span", { text: V.afvinken })
-          )
-        )
-      );
-    }
+    if (team) kop.push(moonControls(maan));
     if (stepError) kop.push(el("p", { class: "formerror", role: "alert", text: stepError }));
 
     const stage = el(
@@ -2323,14 +2576,36 @@
         showFormError(event.target.form, "");
         return;
       }
-      if (event.target.dataset.act !== "toggle-moon") return;
+      const act = event.target.dataset.act;
+      if (act !== "toggle-moon" && act !== "moon-status" && act !== "moon-mensen") return;
       const naam = onderdeelById.get(currentPlanet).naam;
       const maanId = event.target.dataset.id;
-      const klaar = event.target.checked;
+
+      if (act === "moon-mensen") {
+        const lidId = event.target.dataset.lid;
+        const aan = event.target.checked;
+        changeMoons(
+          (manen) =>
+            manen.map((maan) => {
+              if (maan.id !== maanId) return maan;
+              const gekozen = new Set(maan.mensen || []);
+              if (aan) gekozen.add(lidId);
+              else gekozen.delete(lidId);
+              return opgeruimd(Object.assign({}, maan, { mensen: teamleden.map((lid) => lid.id).filter((id) => gekozen.has(id)) }));
+            }),
+          "Voortgang bijgewerkt: teamleden bij een maan van " + naam,
+          '[data-act="moon-mensen"][data-lid="' + lidId + '"]'
+        );
+        return;
+      }
+
+      /* Het vakje in de lijst kent twee standen: af of nog te doen. De keuze in de maanweergave heeft er drie. */
+      const status = act === "moon-status" ? event.target.value : event.target.checked ? "klaar" : "open";
+      const woord = { klaar: "afgerond", bezig: "bezig", open: "heropend" }[status];
       changeMoons(
-        (manen) => manen.map((maan) => (maan.id === maanId ? Object.assign({}, maan, { klaar }) : maan)),
-        "Voortgang bijgewerkt: maan " + (klaar ? "afgerond" : "heropend") + " bij " + naam,
-        '[data-act="toggle-moon"][data-id="' + maanId + '"]'
+        (manen) => manen.map((maan) => (maan.id === maanId ? metStatus(maan, status) : maan)),
+        "Voortgang bijgewerkt: maan " + woord + " bij " + naam,
+        act === "moon-status" ? '[data-act="moon-status"][value="' + status + '"]' : '[data-act="toggle-moon"][data-id="' + maanId + '"]'
       );
     });
 
@@ -2377,7 +2652,7 @@
     if ("ResizeObserver" in window) new ResizeObserver(fitGalaxy).observe(galaxy);
 
     document.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape" || currentView !== "voortgang" || jumping || (teamDialog && teamDialog.open)) return;
+      if (event.key !== "Escape" || currentView !== "voortgang" || jumping || modalOpen()) return;
       if (!currentPlanet) {
         if (galaxyForm) {
           galaxyForm = false;
@@ -3370,6 +3645,7 @@
   renderGalaxy();
   bindDetail();
   bindDetailDocs();
+  bindViewer();
   bindVoortgang();
   if (EDITOR) bindTeam();
   renderTeamState();
