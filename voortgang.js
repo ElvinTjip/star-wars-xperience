@@ -56,7 +56,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
           }
         ],
         "mensen": [
-          "elvin"
+          "elvin",
+          "coen"
         ],
         "bezig": true
       }
