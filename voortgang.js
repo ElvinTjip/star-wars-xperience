@@ -18,7 +18,10 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "id": "doelgroep",
         "titel": "Doelgroep",
         "klaar": true,
-        "beeld": "dagobah"
+        "beeld": "dagobah",
+        "mensen": [
+          "elvin"
+        ]
       },
       {
         "id": "best-practice",
