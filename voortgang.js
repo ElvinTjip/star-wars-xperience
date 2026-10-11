@@ -29,7 +29,6 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "klaar": true,
         "beeld": "bespin",
         "mensen": [
-          "elvin",
           "coen"
         ]
       }
