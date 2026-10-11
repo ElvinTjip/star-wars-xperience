@@ -39,7 +39,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "lasergame",
         "titel": "Lasergame",
-        "klaar": true,
+        "klaar": false,
         "beeld": "dathomir",
         "media": [
           {
