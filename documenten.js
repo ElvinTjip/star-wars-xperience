@@ -14,5 +14,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-10",
     "door": "ElvinTjip",
     "pad": "documenten/deskresearch/doelgroep/star-wars-experience-doelgroeponderzoek.pdf"
+  },
+  {
+    "id": "mv3sa8i14ugt3",
+    "maan": "deskresearch/best-practice",
+    "titel": "Best Pratices",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-11",
+    "door": "info@coengeldof.nl",
+    "pad": "documenten/deskresearch/best-practice/bestpratcies.pdf"
   }
 ];
