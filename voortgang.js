@@ -57,7 +57,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         ],
         "mensen": [
           "elvin"
-        ]
+        ],
+        "bezig": true
       }
     ]
   }
