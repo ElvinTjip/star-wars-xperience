@@ -381,7 +381,8 @@ window.STAKEHOLDERMAP = {
       wieTitel: "Wie werkt eraan?",
       wieHulp: "Een maan die af is, krijgt de kleur van iedereen die je hier aanvinkt.",
       door: "Door {namen}",
-      legenda: "Geel is bezig. Een afgeronde maan heeft de kleur van wie eraan werkte:"
+      legenda: "Geel is bezig. Een afgeronde maan heeft de kleur van wie eraan werkte, en de ring om de planeet toont per persoon wat af is:",
+      aandeel: "Aandeel in wat af is:"
     },
 
     team: {

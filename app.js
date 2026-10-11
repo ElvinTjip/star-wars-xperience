@@ -1257,13 +1257,70 @@
 
   /* Een planeet: het plaatje uit beeld/planeten als dat is opgegeven, anders een getekende draadbol.
      De ring eromheen toont de voortgang. */
+  /* Wat van een planeet af is, verdeeld naar wie het deed, zodat te zien is of het eerlijk verdeeld is. Elke afgeronde maan
+     telt voor 1; werkten er twee of drie mensen aan, dan krijgt ieder een gelijk deel. Manen zonder opgegeven mensen
+     staan ijswit achter de kleuren. Alle delen zijn een percentage van alle manen van de planeet; wat bezig of nog te doen
+     is, blijft leeg (bezig staat bij de maan zelf in geel). */
+  const IJS_KLEUR = "#eaf4ff";
+  function voortgangDelen(p) {
+    if (!p.totaal) return [];
+    const af = p.manen.filter((maan) => maan.klaar);
+    const delen = [];
+    for (const lid of teamleden) {
+      const aandeel = af.reduce((som, maan) => {
+        const mensen = maanMensen(maan);
+        return mensen.some((m) => m.id === lid.id) ? som + 1 / mensen.length : som;
+      }, 0);
+      if (aandeel) delen.push({ lid, kleur: lid.kleur, aandeel, deel: (aandeel / p.totaal) * 100 });
+    }
+    const zonder = af.filter((maan) => !maanMensen(maan).length).length;
+    if (zonder) delen.push({ kleur: IJS_KLEUR, aandeel: zonder, deel: (zonder / p.totaal) * 100 });
+    return delen;
+  }
+
+  /* Onder de voortgangsbalk: hoeveel ieder heeft afgerond, zodat te zien is dat het eerlijk verdeeld is. */
+  function aandeelEl(p) {
+    const delen = voortgangDelen(p).filter((deel) => deel.lid);
+    if (!delen.length) return null;
+    return el(
+      "p",
+      { class: "legenda legenda--aandeel" },
+      el("span", { text: V.aandeel }),
+      el(
+        "span",
+        { class: "crew" },
+        delen.map((deel) =>
+          el(
+            "span",
+            { class: "crew__lid" },
+            el("span", { class: "crew__dot", style: "background:" + deel.kleur, "aria-hidden": "true" }),
+            el("span", { text: deel.lid.naam + " " + deel.aandeel.toLocaleString("nl-NL", { maximumFractionDigits: 1 }) })
+          )
+        )
+      )
+    );
+  }
+
+  /* De ring om een planeet in die delen, met een smalle opening ertussen als er meer dan één kleur is. */
+  function ringSvg(p) {
+    const delen = voortgangDelen(p);
+    const gat = delen.length > 1 ? 1.2 : 0;
+    let start = 0;
+    return delen
+      .map((deel) => {
+        const lengte = Math.max(deel.deel - gat, 0.4);
+        const circle =
+          '<circle class="planet__ring" cx="70" cy="70" r="64" pathLength="100" stroke="' + deel.kleur +
+          '" stroke-dasharray="' + lengte.toFixed(2) + ' 100" stroke-dashoffset="' + (-(start + gat / 2)).toFixed(2) +
+          '" transform="rotate(-90 70 70)"' + (delen.length === 1 ? ' stroke-linecap="round"' : "") + "/>";
+        start += deel.deel;
+        return circle;
+      })
+      .join("");
+  }
+
   function planetSvg(index, p, onderdeel) {
-    const deel = p.totaal ? (p.klaar / p.totaal) * 100 : 0;
-    const ring =
-      '<circle class="planet__track" cx="70" cy="70" r="64"/>' +
-      (deel
-        ? '<circle class="planet__ring" cx="70" cy="70" r="64" pathLength="100" stroke-dasharray="' + deel.toFixed(1) + ' 100" transform="rotate(-90 70 70)"/>'
-        : "");
+    const ring = '<circle class="planet__track" cx="70" cy="70" r="64"/>' + ringSvg(p);
     const naam = onderdeel && onderdeel.planeet;
     if (!naam || mislukteBeelden.has(naam)) return wirePlanet(index, ring);
 
@@ -2050,9 +2107,10 @@
             "aria-valuenow": String(p.klaar),
             "aria-valuetext": telling
           },
-          el("span", { class: "progress__fill", style: "width:" + ((p.klaar / p.totaal) * 100).toFixed(1) + "%" })
+          voortgangDelen(p).map((deel) => el("span", { class: "progress__fill", style: "width:" + deel.deel.toFixed(2) + "%;background:" + deel.kleur }))
         ),
-        el("p", { class: "progress__text", text: telling })
+        el("p", { class: "progress__text", text: telling }),
+        aandeelEl(p)
       );
     }
 

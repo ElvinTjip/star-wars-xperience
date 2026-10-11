@@ -1247,11 +1247,10 @@ a.doc__link:hover .doc__titel {
   stroke-width: 1;
 }
 
+/* De ring om een planeet: de kleur en de lengte staan op elk deel zelf (zie ringSvg), per persoon een deel */
 .planet__ring {
   fill: none;
-  stroke: var(--ice);
   stroke-width: 3;
-  stroke-linecap: round;
 }
 
 /* De lichtrand om een planeet met een plaatje */
@@ -1730,16 +1729,19 @@ a.doc__link:hover .doc__titel {
 }
 
 .progress {
+  display: flex;
+  gap: 2px;
   height: 8px;
   border-radius: var(--r-full);
   background: rgba(128, 176, 224, 0.2);
   overflow: hidden;
 }
 
+/* Elk deel van de balk is van één persoon (kleur en breedte staan op het deel zelf), of geel voor wat bezig is */
 .progress__fill {
   display: block;
+  flex: none;
   height: 100%;
-  border-radius: inherit;
   background: var(--ice);
 }
 
