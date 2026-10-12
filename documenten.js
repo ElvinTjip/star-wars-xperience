@@ -23,5 +23,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-11",
     "door": "info@coengeldof.nl",
     "pad": "documenten/deskresearch/best-practice/bestpratcies.pdf"
+  },
+  {
+    "id": "mv54lkkj1dfhh",
+    "maan": "deskresearch/concurrentieanalyse",
+    "titel": "Concurent",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-12",
+    "door": "Stan",
+    "pad": "documenten/deskresearch/concurrentieanalyse/concurentanalse-star-wars.pdf"
   }
 ];
