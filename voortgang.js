@@ -11,7 +11,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "concurrentieanalyse",
         "titel": "Concurrentieanalyse",
-        "klaar": true,
+        "klaar": false,
         "beeld": "corellia",
         "mensen": [
           "stan"
