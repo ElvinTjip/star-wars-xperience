@@ -162,7 +162,10 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "id": "mv75fcec3gqjj",
         "titel": "Groepinterview",
         "klaar": false,
-        "beeld": "corellia"
+        "beeld": "corellia",
+        "mensen": [
+          "elvin"
+        ]
       }
     ]
   }
