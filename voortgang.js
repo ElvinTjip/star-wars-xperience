@@ -152,6 +152,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "titel": "interview",
         "klaar": false,
         "beeld": "chandrila"
+      },
+      {
+        "id": "mv75fcec3gqjj",
+        "titel": "Groepinterview",
+        "klaar": false,
+        "beeld": "corellia"
       }
     ]
   }
