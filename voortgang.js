@@ -124,7 +124,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "beeld": "corellia",
         "mensen": [
           "stan"
-        ]
+        ],
+        "bezig": true
       }
     ]
   }
