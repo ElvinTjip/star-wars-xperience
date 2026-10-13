@@ -153,7 +153,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "klaar": false,
         "beeld": "chandrila",
         "mensen": [
-          "stan"
+          "stan",
+          "coen"
         ]
       },
       {
