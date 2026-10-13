@@ -32,14 +32,5 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-12",
     "door": "Stan",
     "pad": "documenten/deskresearch/concurrentieanalyse/concurentanalse-star-wars.pdf"
-  },
-  {
-    "id": "mv71tixabw6pa",
-    "maan": "deskresearch/mv71sj6nvn9am",
-    "titel": "Conclusie Deskreasch",
-    "soort": "bestand",
-    "toegevoegd": "2026-10-13",
-    "door": "ElvinTjip",
-    "pad": "documenten/deskresearch/mv71sj6nvn9am/conclusie-deskresearch-star-wars-xperience.pdf"
   }
 ];
