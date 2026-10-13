@@ -131,7 +131,10 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "id": "mv75dqad3zr0e",
         "titel": "Podrace karten",
         "klaar": false,
-        "beeld": "bespin"
+        "beeld": "bespin",
+        "mensen": [
+          "coen"
+        ]
       }
     ]
   }
