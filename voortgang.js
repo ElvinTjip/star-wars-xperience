@@ -38,7 +38,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "mv71v9nrby6rl",
         "titel": "Conclusie Deskresearch",
-        "klaar": true,
+        "klaar": false,
         "beeld": "alderaan",
         "mensen": [
           "elvin"
