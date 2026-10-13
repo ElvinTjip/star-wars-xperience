@@ -116,6 +116,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
           "elvin"
         ],
         "bezig": true
+      },
+      {
+        "id": "mv75d4xt8ge98",
+        "titel": "Laser game concept",
+        "klaar": false,
+        "beeld": "corellia"
       }
     ]
   }
