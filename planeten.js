@@ -37,7 +37,9 @@ window.STAKEHOLDERMAP_PLANETEN = [
     "naam": "Concepten",
     "planeet": "naboo",
     "stakeholders": [
-      "licentiehouder"
+      "licentiehouder",
+      "mark-vernon",
+      "projectgroep"
     ]
   },
   {
