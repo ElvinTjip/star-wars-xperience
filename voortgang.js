@@ -99,14 +99,13 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "mv72iibpa8ssp",
         "titel": "1E ITERATIE CONCEPT",
-        "klaar": false,
+        "klaar": true,
         "beeld": "alderaan",
         "mensen": [
           "elvin",
           "stan",
           "coen"
-        ],
-        "bezig": true
+        ]
       }
     ]
   }
