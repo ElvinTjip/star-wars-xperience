@@ -155,7 +155,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "mensen": [
           "stan",
           "coen"
-        ]
+        ],
+        "bezig": true
       },
       {
         "id": "mv75fcec3gqjj",
