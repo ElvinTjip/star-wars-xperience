@@ -121,7 +121,10 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "id": "mv75d4xt8ge98",
         "titel": "Laser game concept",
         "klaar": false,
-        "beeld": "corellia"
+        "beeld": "corellia",
+        "mensen": [
+          "stan"
+        ]
       }
     ]
   }
