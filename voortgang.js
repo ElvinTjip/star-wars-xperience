@@ -111,7 +111,10 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "id": "mv75cj8gm4g83",
         "titel": "Concept Degoba yoda klimmen",
         "klaar": false,
-        "beeld": "chandrila"
+        "beeld": "chandrila",
+        "mensen": [
+          "elvin"
+        ]
       }
     ]
   }
