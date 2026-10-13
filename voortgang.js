@@ -151,7 +151,10 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "id": "mv75f6fb7csiv",
         "titel": "interview",
         "klaar": false,
-        "beeld": "chandrila"
+        "beeld": "chandrila",
+        "mensen": [
+          "stan"
+        ]
       },
       {
         "id": "mv75fcec3gqjj",
