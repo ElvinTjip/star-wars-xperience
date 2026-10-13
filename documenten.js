@@ -41,5 +41,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-13",
     "door": "ElvinTjip",
     "pad": "documenten/deskresearch/mv71v9nrby6rl/conclusie-deskresearch-star-wars-xperience.pdf"
+  },
+  {
+    "id": "mv72j15rcbsc4",
+    "maan": "concepten/mv72iibpa8ssp",
+    "titel": "1E ITERATIE",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-13",
+    "door": "info@coengeldof.nl",
+    "pad": "documenten/concepten/mv72iibpa8ssp/1e-iteratie-concept.pdf"
   }
 ];
