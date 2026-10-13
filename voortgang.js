@@ -106,6 +106,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
           "stan",
           "coen"
         ]
+      },
+      {
+        "id": "mv75cj8gm4g83",
+        "titel": "Concept Degoba yoda klimmen",
+        "klaar": false,
+        "beeld": "chandrila"
       }
     ]
   }
