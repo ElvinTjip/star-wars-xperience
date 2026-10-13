@@ -146,6 +146,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "titel": "Enqute reddit",
         "klaar": false,
         "beeld": "alderaan"
+      },
+      {
+        "id": "mv75f6fb7csiv",
+        "titel": "interview",
+        "klaar": false,
+        "beeld": "chandrila"
       }
     ]
   }
