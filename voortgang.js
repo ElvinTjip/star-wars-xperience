@@ -138,5 +138,15 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "bezig": true
       }
     ]
+  },
+  "fieldresearch": {
+    "manen": [
+      {
+        "id": "mv75evdj8no5u",
+        "titel": "Enqute reddit",
+        "klaar": false,
+        "beeld": "alderaan"
+      }
+    ]
   }
 };
