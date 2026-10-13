@@ -38,8 +38,11 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "mv71sj6nvn9am",
         "titel": "Conclusie Desk reascher",
-        "klaar": false,
-        "beeld": "alderaan"
+        "klaar": true,
+        "beeld": "alderaan",
+        "mensen": [
+          "elvin"
+        ]
       }
     ]
   },
