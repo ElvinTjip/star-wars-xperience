@@ -93,5 +93,15 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "beeld": "chandrila"
       }
     ]
+  },
+  "concepten": {
+    "manen": [
+      {
+        "id": "mv72iibpa8ssp",
+        "titel": "1E ITERATIE CONCEPT",
+        "klaar": false,
+        "beeld": "alderaan"
+      }
+    ]
   }
 };
