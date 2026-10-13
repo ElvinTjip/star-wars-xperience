@@ -126,6 +126,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
           "stan"
         ],
         "bezig": true
+      },
+      {
+        "id": "mv75dqad3zr0e",
+        "titel": "Podrace karten",
+        "klaar": false,
+        "beeld": "bespin"
       }
     ]
   }
