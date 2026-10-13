@@ -114,7 +114,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "beeld": "chandrila",
         "mensen": [
           "elvin"
-        ]
+        ],
+        "bezig": true
       }
     ]
   }
