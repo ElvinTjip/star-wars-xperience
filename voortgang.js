@@ -105,7 +105,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
           "elvin",
           "stan",
           "coen"
-        ]
+        ],
+        "bezig": true
       }
     ]
   }
