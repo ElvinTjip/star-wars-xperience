@@ -18,9 +18,8 @@ window.STAKEHOLDERMAP_PLANETEN = [
       "docenten-coach",
       "mark-vernon",
       "projectgroep",
-      "bezoekers",
-      "doelgroep",
-      "testpubliek"
+      "sterfans",
+      "uitjesgroepen"
     ]
   },
   {
@@ -28,8 +27,8 @@ window.STAKEHOLDERMAP_PLANETEN = [
     "naam": "Fieldresearch",
     "planeet": "tatooine",
     "stakeholders": [
-      "bezoekers",
-      "doelgroep"
+      "sterfans",
+      "uitjesgroepen"
     ]
   },
   {
@@ -48,9 +47,8 @@ window.STAKEHOLDERMAP_PLANETEN = [
     "planeet": "kamino",
     "stakeholders": [
       "mark-vernon",
-      "bezoekers",
-      "doelgroep",
-      "testpubliek"
+      "sterfans",
+      "uitjesgroepen"
     ]
   },
   {
