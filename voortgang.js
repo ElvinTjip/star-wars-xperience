@@ -34,6 +34,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "mensen": [
           "coen"
         ]
+      },
+      {
+        "id": "mv71v9nrby6rl",
+        "titel": "Conclusie Deskresearch",
+        "klaar": false,
+        "beeld": "alderaan"
       }
     ]
   },
