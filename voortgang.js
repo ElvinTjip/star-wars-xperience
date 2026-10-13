@@ -41,7 +41,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "klaar": true,
         "beeld": "alderaan",
         "mensen": [
-          "elvin"
+          "elvin",
+          "stan"
         ]
       }
     ]
