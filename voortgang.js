@@ -146,7 +146,10 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "titel": "Enqute reddit",
         "klaar": false,
         "beeld": "alderaan",
-        "bezig": true
+        "bezig": true,
+        "mensen": [
+          "elvin"
+        ]
       },
       {
         "id": "mv75f6fb7csiv",
