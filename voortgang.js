@@ -34,6 +34,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "mensen": [
           "coen"
         ]
+      },
+      {
+        "id": "mv71sj6nvn9am",
+        "titel": "Conclusie Desk reascher",
+        "klaar": false,
+        "beeld": "alderaan"
       }
     ]
   },
