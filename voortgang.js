@@ -134,7 +134,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "beeld": "bespin",
         "mensen": [
           "coen"
-        ]
+        ],
+        "bezig": true
       }
     ]
   }
