@@ -41,6 +41,8 @@ window.STAKEHOLDERMAP = {
     { id: "coen", naam: "Coen", kleur: "#4fe39a" }
   ],
   bezigKleur: "#ffe14a",
+  /* De lijn tussen planeten op de sterrenkaart licht in deze kleur op zodra de planeet ervoor helemaal af is. */
+  voortgangKleur: "#6cf26a",
 
   /*
     Beelden. "uitsnede" is het deel van het plaatje dat getoond wordt:
@@ -81,7 +83,7 @@ window.STAKEHOLDERMAP = {
     {
       id: "voortgang",
       tab: "Voortgang",
-      intro: "Kies een planeet om de voortgang van dat onderdeel te volgen."
+      intro: "Kies een planeet om de voortgang van dat onderdeel te volgen. De lijn naar de volgende planeet licht groen op zodra een planeet helemaal af is."
     }
   ],
 

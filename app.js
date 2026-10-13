@@ -1188,6 +1188,8 @@
   const maanMensen = (maan) => teamleden.filter((lid) => (maan.mensen || []).includes(lid.id));
   const BEZIG_KLEUR = data.bezigKleur || "#ffe14a";
   document.documentElement.style.setProperty("--bezig", BEZIG_KLEUR);
+  /* De groene voortgangslijn op de sterrenkaart; bewust een ander groen dan dat van Coen. */
+  document.documentElement.style.setProperty("--af", data.voortgangKleur || "#6cf26a");
 
   function opsomming(namen) {
     return namen.length < 2 ? namen.join("") : namen.slice(0, -1).join(", ") + " en " + namen[namen.length - 1];
@@ -1421,26 +1423,48 @@
     );
   }
 
-  /* De route loopt in een vloeiende lijn langs alle planeten en loopt aan beide kanten door tot de rand. */
-  function routePath(points, wide) {
-    if (!points.length) return "";
+  /* De route loopt in een vloeiende lijn langs alle planeten en loopt aan beide kanten door tot de rand.
+     Hij wordt in stukken gegeven: eerst de lijn tot de eerste planeet, dan van elke planeet naar de volgende, en als
+     laatste de lijn na de laatste planeet. Zo kan elk stuk zelf oplichten (zie renderGalaxy). */
+  function routeSegmenten(points, wide) {
+    if (!points.length) return [];
     const first = points[0];
     const last = points[points.length - 1];
     const all = [wide ? [0, first[1] + 8] : [first[0] + 8, 0]].concat(points, [wide ? [100, last[1] - 8] : [last[0] - 8, 100]]);
     const at = (i) => all[Math.max(0, Math.min(all.length - 1, i))];
     const f = (value) => value.toFixed(2);
-    let d = "M" + f(all[0][0]) + " " + f(all[0][1]);
-    for (let i = 0; i < all.length - 1; i++) {
+    return all.slice(0, -1).map((p1, i) => {
       const p0 = at(i - 1);
-      const p1 = at(i);
       const p2 = at(i + 1);
       const p3 = at(i + 2);
-      d +=
+      return (
+        "M" + f(p1[0]) + " " + f(p1[1]) +
         "C" + f(p1[0] + (p2[0] - p0[0]) / 6) + " " + f(p1[1] + (p2[1] - p0[1]) / 6) +
         " " + f(p2[0] - (p3[0] - p1[0]) / 6) + " " + f(p2[1] - (p3[1] - p1[1]) / 6) +
-        " " + f(p2[0]) + " " + f(p2[1]);
-    }
-    return d;
+        " " + f(p2[0]) + " " + f(p2[1])
+      );
+    });
+  }
+
+  /* Een planeet is af als al zijn manen af zijn. */
+  const planeetAf = (p) => p.totaal > 0 && p.klaar === p.totaal;
+
+  /* De route als voortgangslijn: het stuk na een planeet licht groen op zodra die planeet helemaal af is (de lijn voor de
+     eerste planeet en de lijn na de laatste horen bij de eerste en de laatste planeet). Een groene gloed ligt onder het
+     gestippelde stuk, als brede zachte banen, want een filter zou met de uitgerekte tekening meeschalen. */
+  function routeSvg(points, laag, af) {
+    return routeSegmenten(points, laag === "wide")
+      .map((d, k) => {
+        const licht = af[Math.max(k - 1, 0)];
+        return (
+          (licht
+            ? '<path class="galaxy__glow galaxy__route--' + laag + '" d="' + d + '"/>' +
+              '<path class="galaxy__glow galaxy__glow--kern galaxy__route--' + laag + '" d="' + d + '"/>'
+            : "") +
+          '<path class="galaxy__route galaxy__route--' + laag + (licht ? " is-af" : "") + '" d="' + d + '"/>'
+        );
+      })
+      .join("");
   }
 
   function renderGalaxy() {
@@ -1453,12 +1477,13 @@
     galaxy.setAttribute("role", "group");
     galaxy.setAttribute("aria-label", V.kaart);
 
+    const af = onderdelen.map((o) => planeetAf(planetProgress(o.id)));
     const chart = svg(
       '<svg class="galaxy__chart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">' +
         '<ellipse class="galaxy__orbit" cx="50" cy="50" rx="47" ry="40"/>' +
         '<ellipse class="galaxy__orbit" cx="50" cy="50" rx="30" ry="23"/>' +
-        '<path class="galaxy__route galaxy__route--wide" d="' + routePath(wide, true) + '"/>' +
-        '<path class="galaxy__route galaxy__route--tall" d="' + routePath(tall, false) + '"/>' +
+        routeSvg(wide, "wide", af) +
+        routeSvg(tall, "tall", af) +
         "</svg>"
     );
 

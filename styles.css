@@ -1205,6 +1205,28 @@ a.doc__link:hover .doc__titel {
   display: none;
 }
 
+/* Voortgangslijn: het stuk na een planeet die helemaal af is, in groen met een zachte gloed eronder.
+   De gloed zijn twee brede, doorzichtige banen (in schermpixels, want een filter schaalt mee met de uitgerekte tekening). */
+.galaxy__route.is-af {
+  stroke: var(--af);
+  stroke-width: 2.25;
+  opacity: 1;
+}
+
+.galaxy__glow {
+  fill: none;
+  stroke: var(--af);
+  stroke-width: 18;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.1;
+}
+
+.galaxy__glow--kern {
+  stroke-width: 8;
+  opacity: 0.22;
+}
+
 
 .planet {
   --d: calc(var(--size) * 0.8);
