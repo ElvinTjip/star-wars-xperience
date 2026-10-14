@@ -3500,3 +3500,7 @@ a.btn {
 .actie .planeetform {
   flex: 1 1 100%;
 }
+
+.acties[hidden] {
+  display: none;
+}

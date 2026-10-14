@@ -234,13 +234,5 @@ window.STAKEHOLDERMAP_STAKEHOLDERS = {
       "contact": "Via Mark en Vernon"
     }
   ],
-  "acties": [
-    {
-      "id": "locatie-beslisser",
-      "tekst": "Vraag aan Mark en Vernon wie bij de locatie beslist en wie de lasergame draait",
-      "eigenaar": "Elvin",
-      "datum": "2026-10-20",
-      "klaar": false
-    }
-  ]
+  "acties": []
 };
