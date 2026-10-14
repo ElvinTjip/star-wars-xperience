@@ -1708,6 +1708,8 @@
 
   function renderActies() {
     if (!actieSectie) return;
+    /* Zonder acties ziet een bezoeker het blok niet; in de editor blijft het staan om er een toe te voegen. */
+    actieSectie.hidden = !team && acties.length === 0;
     const delen = [el("h2", { id: "acties-titel", text: A.titel }), el("p", { class: "acties__intro", text: A.intro })];
     if (actieStatus) delen.push(el("p", { class: "docs__status", role: "status", text: actieStatus }));
     delen.push(
