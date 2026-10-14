@@ -4,11 +4,12 @@
   De pagina bouwt zichzelf op uit dit bestand. Pas hier teksten aan en
   ververs de pagina. Laat de aanhalingstekens en de komma's staan.
 
-  Documenten staan in documenten.js, de planeten in planeten.js en de manen per
-  planeet in voortgang.js. Die drie werkt de pagina zelf bij als het team in de
-  editor (editor.html) iets toevoegt of verwijdert.
+  Documenten staan in documenten.js, de planeten in planeten.js, de manen per
+  planeet in voortgang.js en de stakeholders, het plan van aanpak en de acties
+  in stakeholders.js. Die vier werkt de pagina zelf bij als het team in de
+  editor (editor.html) iets toevoegt, aanpast of verwijdert.
 
-  Hoe het in elkaar zit:
+  Hoe het in elkaar zit (in stakeholders.js):
   - Elke stakeholder staat in één kwadrant (het veld "kwadrant" verwijst
     naar een "id" uit de lijst kwadranten).
   - Elke stakeholder verwijst met "plan" naar een rij uit het plan van
@@ -140,76 +141,11 @@ window.STAKEHOLDERMAP = {
   ],
 
   /*
-    Bij "hologram" kies je wat het paneel als hologram projecteert:
+    De stakeholders, de rijen van het plan van aanpak en de acties staan in stakeholders.js.
+    Die werkt de pagina zelf bij als het team in de editor (editor.html) iets toevoegt, aanpast
+    of verwijdert. Bij "hologram" kies je wat het paneel als hologram projecteert:
     "persoon", "duo", "trio", "groep" of "logo" (het Star Wars-logo).
-    Zonder "hologram" verschijnt er geen projectie.
   */
-  stakeholders: [
-    {
-      id: "docenten-coach",
-      naam: "Docenten en coach",
-      toelichting: "",
-      kwadrant: "tevreden-houden",
-      plan: "docenten-coach",
-      hologram: "groep"
-    },
-    {
-      id: "licentiehouder",
-      naam: "Licentiehouder Star Wars",
-      toelichting: "",
-      kwadrant: "tevreden-houden",
-      plan: "licentiehouder",
-      hologram: "logo"
-    },
-    {
-      id: "mark-vernon",
-      naam: "Mark en Vernon",
-      toelichting: "Opdrachtgevers",
-      kwadrant: "nauw-betrekken",
-      plan: "mark-vernon",
-      hologram: "duo"
-    },
-    {
-      id: "projectgroep",
-      naam: "De projectgroep",
-      toelichting: "Stan, Coen en Elvin",
-      kwadrant: "nauw-betrekken",
-      plan: "team",
-      hologram: "trio"
-    },
-    {
-      id: "technisch-expert",
-      naam: "Technisch expert Jaap Evenhuis",
-      toelichting: "HvA-docent, expert in immersive",
-      kwadrant: "monitoren",
-      plan: "technisch-expert",
-      hologram: "persoon"
-    },
-    {
-      id: "bezoekers",
-      naam: "De bezoekers",
-      toelichting: "",
-      kwadrant: "op-de-hoogte-houden",
-      plan: "bezoekers-doelgroep",
-      hologram: "groep"
-    },
-    {
-      id: "doelgroep",
-      naam: "De doelgroep",
-      toelichting: "",
-      kwadrant: "op-de-hoogte-houden",
-      plan: "bezoekers-doelgroep",
-      hologram: "groep"
-    },
-    {
-      id: "testpubliek",
-      naam: "Testpubliek",
-      toelichting: "",
-      kwadrant: "op-de-hoogte-houden",
-      plan: "bezoekers-doelgroep",
-      hologram: "groep"
-    }
-  ],
 
   plan: {
     titel: "Plan van aanpak",
@@ -219,53 +155,6 @@ window.STAKEHOLDERMAP = {
       { id: "producten", vraag: "Aan welke producten gekoppeld?" },
       { id: "samenwerken", vraag: "Hoe ga je samenwerken en feedback ophalen?" },
       { id: "contact", vraag: "Hoe hou je contact?" }
-    ],
-    rijen: [
-      {
-        id: "mark-vernon",
-        stakeholder: "Mark en Vernon",
-        fase: "Kick-off, tussenpresentatie, eindpitch",
-        producten: "Creative brief, prototype, pitch",
-        samenwerken: "Feedback na pitches en per mail",
-        contact: "Via mail en de pitches"
-      },
-      {
-        id: "team",
-        stakeholder: "Team",
-        fase: "In alle fases",
-        producten: "Samenwerkingsovereenkomst, 360-graden feedback",
-        samenwerken: "Trello en de lessen",
-        contact: "WhatsApp"
-      },
-      {
-        id: "docenten-coach",
-        stakeholder: "Docenten en coach",
-        fase: "Bij de briefings en feedbackmomenten",
-        producten: "Deliverables met feedback",
-        samenwerken: "Via de les",
-        contact: "Via de les"
-      },
-      {
-        id: "bezoekers-doelgroep",
-        stakeholder: "Bezoekers en doelgroep",
-        fase: "Fieldresearch en test van het prototype",
-        producten: "Prototype",
-        samenwerken: "Bij de test",
-        contact: "Bij het prototype en het interview"
-      },
-      {
-        id: "licentiehouder",
-        stakeholder: "Licentiehouder",
-        fase: "Aan het einde, als alles af is",
-        producten: "Het volledige concept",
-        samenwerken: "Na een pitch van de opdrachtgevers",
-        contact: "Via Mark en Vernon"
-      },
-      {
-        id: "technisch-expert",
-        stakeholder: "Technisch expert Jaap Evenhuis",
-        open: true
-      }
     ]
   },
 
@@ -281,6 +170,84 @@ window.STAKEHOLDERMAP = {
     staatOnder: "Staat in het plan van aanpak onder",
     open: "Nog in te vullen",
     openUitleg: "Deze stakeholder staat op de kaart, maar nog niet in het plan van aanpak.",
+
+    /* Wat er per stakeholder in het paneel en op de kaart staat. */
+    profiel: {
+      titel: "Over deze stakeholder",
+      invloed: "Invloed",
+      belang: "Belang",
+      informatie: "Informatiebehoefte",
+      afstemmen: "Hoe we afstemmen",
+      status: "Status",
+      niveaus: { laag: "Laag", gemiddeld: "Gemiddeld", hoog: "Hoog" },
+      statussen: { nu: "Nu actief", later: "Later, nog niet benaderd" },
+      kort: { later: "Later" },
+      planLater: "Later, nog niet benaderd"
+    },
+
+    /* Stakeholders toevoegen, aanpassen en verwijderen in de editor. */
+    beheer: {
+      titel: "Stakeholder beheren",
+      toevoegen: "Stakeholder toevoegen",
+      aanpassen: "Stakeholder aanpassen",
+      verwijderen: "Stakeholder verwijderen",
+      opslaan: "Opslaan",
+      annuleren: "Annuleren",
+      bezig: "Bezig met opslaan",
+      veldNaam: "Naam",
+      veldToelichting: "Toelichting",
+      veldInvloed: "Invloed",
+      veldBelang: "Belang",
+      veldKwadrant: "Plek op de kaart",
+      kwadrantHulp: "Gemiddeld telt bij de plek op de kaart als laag. Kies zelf een andere plek als dat beter past.",
+      veldInformatie: "Informatiebehoefte",
+      veldAfstemmen: "Hoe we afstemmen",
+      veldStatus: "Status",
+      veldHologram: "Hologram",
+      hologram: { "": "Geen", persoon: "Eén persoon", duo: "Twee personen", trio: "Drie personen", groep: "Groep", logo: "Star Wars-logo" },
+      planKop: "Plan van aanpak",
+      zeker: "Stakeholder {naam} verwijderen?",
+      verliest: "Daarmee verdwijnt hij ook uit het plan van aanpak, van de planeten en met zijn documenten.",
+      ja: "Ja, verwijderen",
+      toegevoegd: "Stakeholder {naam} is toegevoegd. Hij staat over ongeveer een minuut online voor iedereen.",
+      opgeslagen: "Opgeslagen. De wijziging staat over ongeveer een minuut online voor iedereen.",
+      verwijderd: "Stakeholder {naam} is verwijderd.",
+      foutNaam: "Geef de stakeholder een naam.",
+      foutLetters: "Gebruik letters of cijfers in de naam.",
+      foutStakeholderBestaat: "Er is al een stakeholder met deze naam.",
+      foutStakeholderWeg: "Deze stakeholder bestaat niet meer. Misschien heeft een teamgenoot hem verwijderd."
+    },
+
+    /* Open acties onder de kaart. */
+    acties: {
+      titel: "Acties",
+      intro: "Wat er nu moet gebeuren om de stakeholders goed te bereiken.",
+      leeg: "Er zijn geen acties.",
+      eigenaar: "Eigenaar",
+      datum: "Voor",
+      afgerond: "Afgerond",
+      afvinken: "Actie afgerond: {tekst}",
+      toevoegen: "Actie toevoegen",
+      aanpassen: "Aanpassen",
+      verwijderen: "Verwijderen",
+      aanpassenLabel: "Pas actie aan: {tekst}",
+      verwijderLabel: "Verwijder actie: {tekst}",
+      veldTekst: "Wat moet er gebeuren?",
+      veldEigenaar: "Eigenaar",
+      veldDatum: "Datum",
+      opslaan: "Opslaan",
+      annuleren: "Annuleren",
+      zeker: "Deze actie verwijderen?",
+      ja: "Ja, verwijderen",
+      bezig: "Bezig met opslaan",
+      toegevoegd: "Actie toegevoegd. Hij staat over ongeveer een minuut online voor iedereen.",
+      opgeslagen: "Opgeslagen. De wijziging staat over ongeveer een minuut online voor iedereen.",
+      verwijderd: "Actie verwijderd.",
+      foutTekst: "Beschrijf de actie.",
+      foutEigenaar: "Kies wie de actie doet.",
+      foutDatum: "Kies een datum.",
+      foutActieWeg: "Deze actie bestaat niet meer. Misschien heeft een teamgenoot hem verwijderd."
+    },
 
     documenten: {
       titel: "Documenten",

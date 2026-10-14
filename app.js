@@ -20,9 +20,31 @@
   const TT = teksten.team;
   const V = teksten.voortgang;
   const kwadrantById = new Map(data.kwadranten.map((k) => [k.id, k]));
-  const stakeholderById = new Map(data.stakeholders.map((s) => [s.id, s]));
-  const planById = new Map(data.plan.rijen.map((r) => [r.id, r]));
   const teamleden = data.teamleden || [];
+  const P = teksten.profiel;
+  const B = teksten.beheer;
+  const A = teksten.acties;
+
+  /* De stakeholders, de rijen van het plan van aanpak en de acties komen uit stakeholders.js. */
+  let stakeholderById = new Map();
+  let planById = new Map();
+  let acties = [];
+
+  function setStakeholders(waarde) {
+    const bron = waarde && typeof waarde === "object" && !Array.isArray(waarde) ? waarde : {};
+    const lijst = (sleutel) => (Array.isArray(bron[sleutel]) ? bron[sleutel] : []);
+    data.stakeholders = lijst("stakeholders").filter(
+      (s) => s && typeof s.id === "string" && s.id && typeof s.naam === "string" && s.naam && kwadrantById.has(s.kwadrant)
+    );
+    data.plan.rijen = lijst("rijen").filter((r) => r && typeof r.id === "string" && r.id);
+    acties = lijst("acties").filter((a) => a && typeof a.id === "string" && a.id && typeof a.tekst === "string" && a.tekst);
+    stakeholderById = new Map(data.stakeholders.map((s) => [s.id, s]));
+    planById = new Map(data.plan.rijen.map((r) => [r.id, r]));
+  }
+  setStakeholders(window.STAKEHOLDERMAP_STAKEHOLDERS);
+
+  /* De stakeholders zoals ze nu op de pagina staan, in de vorm van stakeholders.js. */
+  const stakeholderState = () => ({ stakeholders: data.stakeholders, rijen: data.plan.rijen, acties });
 
   /* index.html is voor bezoekers en alleen om te lezen; editor.html is voor het team en kan bewerken. */
   const EDITOR = document.body.dataset.modus === "editor";
@@ -48,6 +70,9 @@
   const detailPositie = byId("detail-positie");
   const detailPlan = byId("detail-plan");
   const detailDocs = byId("detail-docs");
+  /* Het blok met invloed, belang en afstemming en het blok om te beheren komen uit de code, niet uit de html. */
+  const detailProfiel = el("div", { id: "detail-profiel" });
+  const detailBeheer = el("div", { id: "detail-beheer", hidden: true });
   /* Alleen in de editor: de balk bovenaan en het venster om met GitHub te verbinden (zie buildEditorShell). */
   let teamDialog = null;
   let teamInhoud = null;
@@ -89,6 +114,18 @@
   let newMoonId = null;
   let arriveTimer = 0;
   let svgCount = 0;
+
+  /* Stakeholders en acties beheren: welk formulier of welke bevestiging open staat, en de melding erna. */
+  let stakeTools = null;
+  let stakeNieuw = false;
+  let stakeEdit = false;
+  let stakeConfirm = false;
+  let stakeStatus = "";
+  let stakeToolsStatus = "";
+  let actieSectie = null;
+  let actieForm = null;
+  let actieConfirm = null;
+  let actieStatus = "";
 
   /* Planeten en manen beheren: welk formulier of welke bevestiging open staat, en de melding erna. */
   let galaxyTools = null;
@@ -137,6 +174,8 @@
       '<svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6.75 9.25a3 3 0 0 0 4.25 0l2-2a3 3 0 0 0-4.25-4.25l-.75.75 M9.25 6.75a3 3 0 0 0-4.25 0l-2 2a3 3 0 0 0 4.25 4.25l.75-.75" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
     trash:
       '<svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2.75 4.25h10.5 M6.25 4.25V2.5h3.5v1.75 M4.25 4.25l.5 9.25h6.5l.5-9.25 M6.75 7v4 M9.25 7v4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    edit:
+      '<svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2.75 13.25 3.5 10 10.75 2.75a1.4 1.4 0 0 1 2 0l.5.5a1.4 1.4 0 0 1 0 2L6 12.5z M9.25 4.25l2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
     plus:
       '<svg class="icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 3v10 M3 8h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
     back:
@@ -383,7 +422,7 @@
     );
   }
 
-  function renderMap() {
+  function renderMap(animate) {
     const plot = el("div", { class: "plot" });
     let nodeIndex = 0;
 
@@ -406,10 +445,12 @@
             "span",
             { class: "node__text" },
             el("span", { class: "node__naam", text: stakeholder.naam }),
-            stakeholder.toelichting && el("span", { class: "node__sub", text: stakeholder.toelichting })
+            stakeholder.toelichting && el("span", { class: "node__sub", text: stakeholder.toelichting }),
+            stakeholder.status === "later" && el("span", { class: "node__status", text: P.kort.later })
           ),
           el("span", { class: "node__docs", hidden: true })
         );
+        if (stakeholder.status === "later") button.classList.add("node--later");
         button.addEventListener("click", () => toggleDetail(stakeholder.id, button));
         nodes.append(el("li", null, button));
       }
@@ -448,6 +489,7 @@
 
     map.append(axis("y", data.assen.invloed), plot, axis("x", data.assen.belang));
 
+    if (animate === false) return;
     map.classList.add("is-booting");
     window.setTimeout(() => map.classList.remove("is-booting"), 2400);
   }
@@ -717,7 +759,7 @@
   }
 
   function setBusy(container, busy, label) {
-    for (const control of container.querySelectorAll("button, input")) control.disabled = busy;
+    for (const control of container.querySelectorAll("button, input, select, textarea")) control.disabled = busy;
     const submit = container.querySelector('button[type="submit"], .btn--danger');
     if (submit) {
       if (busy) {
@@ -851,6 +893,7 @@
     ];
     if (portret) positie.push(portret);
     detailPositie.replaceChildren(...positie);
+    fillProfiel(stakeholder);
 
     if (!rij || rij.open) {
       detailPlan.replaceChildren(
@@ -880,6 +923,24 @@
       )
     );
     detailPlan.replaceChildren(...delen);
+  }
+
+  /* Wat we van de stakeholder weten: invloed, belang, informatiebehoefte, hoe we afstemmen en de status. */
+  function fillProfiel(stakeholder) {
+    const niveau = (waarde) => P.niveaus[waarde] || teksten.open;
+    const rij = (label, inhoud) => el("div", null, el("dt", { text: label }), el("dd", null, inhoud));
+    const status = stakeholder.status === "later" ? "later" : "nu";
+    detailProfiel.replaceChildren(
+      el(
+        "dl",
+        { class: "plan-dl" },
+        rij(P.status, el("span", { class: "statuspil statuspil--" + status, text: P.statussen[status] })),
+        rij(P.invloed, niveau(stakeholder.invloed)),
+        rij(P.belang, niveau(stakeholder.belang)),
+        rij(P.informatie, stakeholder.informatiebehoefte || teksten.open),
+        rij(P.afstemmen, stakeholder.afstemmen || teksten.open)
+      )
+    );
   }
 
   /* Het hologram van een stakeholder: blauwe figuren boven een straler, zoals een holo-oproep. */
@@ -947,8 +1008,12 @@
     docFormOpen = false;
     docStatus = "";
     confirmId = null;
+    stakeEdit = false;
+    stakeConfirm = false;
+    stakeStatus = "";
     fillDetail(stakeholder);
     renderDetailDocs();
+    renderDetailBeheer();
     setExpanded(id);
 
     const sheet = sheetQuery.matches;
@@ -1013,7 +1078,11 @@
 
   /* Escape sluit eerst het formulier, dan pas het paneel. */
   function escapeDetail() {
-    if (docFormOpen) {
+    if (stakeEdit || stakeConfirm) {
+      stakeEdit = false;
+      stakeConfirm = false;
+      renderDetailBeheer();
+    } else if (docFormOpen) {
       docFormOpen = false;
       renderDetailDocs('[data-act="open-form"]');
     } else if (confirmId) {
@@ -1027,6 +1096,19 @@
   function bindDetail() {
     dialog.setAttribute("aria-label", teksten.details);
     byId("detail-plan-titel").textContent = data.plan.titel;
+
+    const planSectie = detailPlan.closest(".detail__plan");
+    planSectie.before(
+      el(
+        "section",
+        { class: "detail__profiel", "aria-labelledby": "detail-profiel-titel" },
+        el("h3", { id: "detail-profiel-titel", text: P.titel }),
+        detailProfiel
+      )
+    );
+    const docsSectie = detailDocs.closest(".detail__docs");
+    docsSectie.after(el("section", { class: "detail__beheer", "aria-labelledby": "detail-beheer-titel" }, detailBeheer));
+    bindStakeForms(detailBeheer);
 
     const sluiten = byId("detail-sluiten");
     sluiten.setAttribute("aria-label", teksten.sluiten);
@@ -1098,6 +1180,9 @@
         .map((id) => kwadrantById.get(id))
         .filter(Boolean);
 
+      const gekoppeld = data.stakeholders.filter((s) => s.plan === rij.id);
+      const later = gekoppeld.length > 0 && gekoppeld.every((s) => s.status === "later");
+
       const naam = el(
         "th",
         { scope: "row", role: "rowheader" },
@@ -1105,6 +1190,7 @@
         kwadranten.map((kwadrant) =>
           el("span", { class: "plan__pos" }, mark(kwadrant), el("span", { text: kwadrant.naam }))
         ),
+        later && el("span", { class: "plan__status", text: P.planLater }),
         el("ul", { class: "plan__docs", dataset: { plan: rij.id }, hidden: true })
       );
 
@@ -1131,7 +1217,7 @@
       );
     });
 
-    byId("weergave-plan").append(
+    byId("weergave-plan").replaceChildren(
       el(
         "div",
         { class: "planwrap" },
@@ -1154,6 +1240,628 @@
       lijst.hidden = docs.length === 0;
       lijst.replaceChildren(...docs.map((doc) => el("li", null, docLink(doc, true))));
     }
+  }
+
+  /* ---------- Stakeholders en acties beheren (alleen in de editor) ---------- */
+
+  /* Tekent kaart, plan van aanpak, paneel en planeten opnieuw na een wijziging. Een open paneel blijft open. */
+  function renderStakeholders() {
+    const id = currentId;
+    map.replaceChildren();
+    renderMap(false);
+    renderPlan();
+    const stakeholder = id && stakeholderById.get(id);
+    if (stakeholder) {
+      lastTrigger = map.querySelector('.node[data-id="' + id + '"]');
+      setExpanded(id);
+      fillDetail(stakeholder);
+      renderDetailBeheer();
+      fitDetail();
+    } else if (id) {
+      closeDetail({ instant: true, restoreFocus: false });
+    }
+    renderDocuments();
+    renderActies();
+    renderVoortgang();
+  }
+
+  /* Gemiddeld telt voor de plek op de kaart als laag; wie het anders wil kiest zelf een plek. */
+  function kwadrantVoor(invloed, belang) {
+    const niveau = (waarde) => (waarde === "hoog" ? "hoog" : "laag");
+    const gevonden = data.kwadranten.find((k) => k.invloed === niveau(invloed) && k.belang === niveau(belang));
+    return (gevonden || data.kwadranten[0]).id;
+  }
+
+  const tekstVeld = (prefix, naam, label, waarde, max) =>
+    el(
+      "div",
+      { class: "field" },
+      el("label", { for: prefix + "-" + naam, text: label }),
+      el("input", { id: prefix + "-" + naam, name: naam, type: "text", maxlength: max, autocomplete: "off", value: waarde || null })
+    );
+
+  const langVeld = (prefix, naam, label, waarde) =>
+    el(
+      "div",
+      { class: "field" },
+      el("label", { for: prefix + "-" + naam, text: label }),
+      el("textarea", { id: prefix + "-" + naam, name: naam, rows: "3", maxlength: "300" }, waarde || "")
+    );
+
+  const keuzeVeld = (prefix, naam, label, opties, gekozen, hulp) =>
+    el(
+      "div",
+      { class: "field" },
+      el("label", { for: prefix + "-" + naam, text: label }),
+      el(
+        "select",
+        { id: prefix + "-" + naam, name: naam, "aria-describedby": hulp ? prefix + "-" + naam + "-hulp" : null },
+        opties.map(([waarde, tekst]) => el("option", { value: waarde, selected: waarde === gekozen, text: tekst }))
+      ),
+      hulp && el("p", { class: "hint", id: prefix + "-" + naam + "-hulp", text: hulp })
+    );
+
+  /* Het formulier voor een nieuwe stakeholder (zonder stakeholder) of om een bestaande aan te passen,
+     met de rij uit het plan van aanpak erbij. */
+  function stakeholderFormEl(stakeholder, prefix) {
+    const nieuw = !stakeholder;
+    const huidig = stakeholder || { invloed: "hoog", belang: "hoog", status: "nu", hologram: "groep" };
+    const rij = (stakeholder && planById.get(stakeholder.plan)) || {};
+    const niveaus = Object.entries(P.niveaus).sort((a, b) => ["laag", "gemiddeld", "hoog"].indexOf(a[0]) - ["laag", "gemiddeld", "hoog"].indexOf(b[0]));
+    const kwadrant = nieuw ? kwadrantVoor(huidig.invloed, huidig.belang) : huidig.kwadrant;
+
+    return el(
+      "form",
+      {
+        class: "planeetform stakeform",
+        id: prefix + "-form",
+        novalidate: true,
+        dataset: { modus: nieuw ? "nieuw" : "aanpassen", hand: nieuw ? "0" : "1" }
+      },
+      tekstVeld(prefix, "naam", B.veldNaam, huidig.naam, "60"),
+      tekstVeld(prefix, "toelichting", B.veldToelichting, huidig.toelichting, "80"),
+      keuzeVeld(prefix, "invloed", B.veldInvloed, niveaus, huidig.invloed),
+      keuzeVeld(prefix, "belang", B.veldBelang, niveaus, huidig.belang),
+      keuzeVeld(prefix, "kwadrant", B.veldKwadrant, data.kwadranten.map((k) => [k.id, k.naam]), kwadrant, B.kwadrantHulp),
+      keuzeVeld(prefix, "status", B.veldStatus, Object.entries(P.statussen), huidig.status === "later" ? "later" : "nu"),
+      langVeld(prefix, "informatiebehoefte", B.veldInformatie, huidig.informatiebehoefte),
+      langVeld(prefix, "afstemmen", B.veldAfstemmen, huidig.afstemmen),
+      keuzeVeld(prefix, "hologram", B.veldHologram, Object.entries(B.hologram), huidig.hologram || ""),
+      el(
+        "fieldset",
+        { class: "picker" },
+        el("legend", { text: B.planKop }),
+        data.plan.kolommen.map((kolom) => tekstVeld(prefix, "plan-" + kolom.id, kolom.vraag, rij[kolom.id], "200"))
+      ),
+      el("p", { class: "formerror", id: prefix + "-fout", role: "alert", hidden: true }),
+      el(
+        "div",
+        { class: "actions" },
+        el("button", { class: "btn btn--primary", type: "submit", text: nieuw ? B.toevoegen : B.opslaan }),
+        el("button", { class: "btn", type: "button", dataset: { act: nieuw ? "stake-nieuw-annuleer" : "stake-annuleer" }, text: B.annuleren })
+      )
+    );
+  }
+
+  /* Het blok onderaan het paneel waar het team de stakeholder aanpast of verwijdert. */
+  function renderDetailBeheer() {
+    const stakeholder = currentId && stakeholderById.get(currentId);
+    detailBeheer.hidden = !team || !stakeholder;
+    if (detailBeheer.hidden) {
+      detailBeheer.replaceChildren();
+      return;
+    }
+    const delen = [el("h3", { id: "detail-beheer-titel", text: B.titel })];
+    if (stakeStatus) delen.push(el("p", { class: "docs__status", role: "status", text: stakeStatus }));
+    if (stakeEdit) {
+      delen.push(stakeholderFormEl(stakeholder, "stake-edit"));
+    } else if (stakeConfirm) {
+      delen.push(
+        el(
+          "div",
+          { class: "doc__confirm doc__confirm--blok" },
+          el("span", { text: fill(B.zeker, { naam: stakeholder.naam }) + " " + B.verliest }),
+          el("button", { class: "btn btn--danger", type: "button", dataset: { act: "stake-verwijder-ja" }, text: B.ja }),
+          el("button", { class: "btn", type: "button", dataset: { act: "stake-verwijder-nee" }, text: B.annuleren }),
+          el("p", { class: "formerror", role: "alert", hidden: true })
+        )
+      );
+    } else {
+      delen.push(
+        el(
+          "div",
+          { class: "actions" },
+          el("button", { class: "btn", type: "button", dataset: { act: "stake-aanpassen" } }, icon("edit"), el("span", { text: B.aanpassen })),
+          el("button", { class: "btn btn--danger", type: "button", dataset: { act: "stake-verwijder-vraag" } }, icon("trash"), el("span", { text: B.verwijderen }))
+        )
+      );
+    }
+    detailBeheer.replaceChildren(...delen);
+  }
+
+  /* De plek onder de kaart waar het team een stakeholder toevoegt. */
+  function renderStakeTools() {
+    if (!stakeTools) return;
+    stakeTools.hidden = !team;
+    if (stakeTools.hidden) return;
+    const delen = [];
+    if (stakeToolsStatus) delen.push(el("p", { class: "docs__status", role: "status", text: stakeToolsStatus }));
+    if (stakeNieuw) {
+      delen.push(el("h3", { id: "stake-nieuw-titel", text: B.toevoegen }), stakeholderFormEl(null, "stake-nieuw"));
+    } else {
+      delen.push(
+        el("button", { class: "btn", type: "button", dataset: { act: "stake-nieuw" } }, icon("plus"), el("span", { text: B.toevoegen }))
+      );
+    }
+    stakeTools.replaceChildren(...delen);
+  }
+
+  function bindStakeForms(container) {
+    const focusIn = (selector) => {
+      const doel = container.querySelector(selector);
+      if (doel) doel.focus();
+    };
+
+    container.addEventListener("change", (event) => {
+      const form = event.target.closest("form.stakeform");
+      if (!form) return;
+      if (event.target.name === "kwadrant") {
+        form.dataset.hand = "1";
+      } else if ((event.target.name === "invloed" || event.target.name === "belang") && form.dataset.hand !== "1") {
+        form.elements.kwadrant.value = kwadrantVoor(form.elements.invloed.value, form.elements.belang.value);
+      }
+    });
+
+    container.addEventListener("submit", (event) => {
+      const form = event.target.closest("form.stakeform");
+      if (!form) return;
+      event.preventDefault();
+      saveStakeholder(form);
+    });
+
+    container.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-act]");
+      if (!target) return;
+      const act = target.dataset.act;
+      if (act === "stake-nieuw") {
+        stakeNieuw = true;
+        stakeToolsStatus = "";
+        renderStakeTools();
+        focusIn("#stake-nieuw-naam");
+      } else if (act === "stake-nieuw-annuleer") {
+        stakeNieuw = false;
+        renderStakeTools();
+        focusIn('[data-act="stake-nieuw"]');
+      } else if (act === "stake-aanpassen") {
+        stakeEdit = true;
+        stakeConfirm = false;
+        stakeStatus = "";
+        renderDetailBeheer();
+        focusIn("#stake-edit-naam");
+      } else if (act === "stake-annuleer") {
+        stakeEdit = false;
+        renderDetailBeheer();
+        focusIn('[data-act="stake-aanpassen"]');
+      } else if (act === "stake-verwijder-vraag") {
+        stakeConfirm = true;
+        stakeEdit = false;
+        stakeStatus = "";
+        renderDetailBeheer();
+        focusIn(".doc__confirm .btn--danger");
+      } else if (act === "stake-verwijder-nee") {
+        stakeConfirm = false;
+        renderDetailBeheer();
+        focusIn('[data-act="stake-verwijder-vraag"]');
+      } else if (act === "stake-verwijder-ja") {
+        deleteStakeholder(target);
+      }
+    });
+  }
+
+  /* Voegt een stakeholder toe of past hem aan, samen met zijn rij in het plan van aanpak. */
+  async function saveStakeholder(form) {
+    const nieuw = form.dataset.modus === "nieuw";
+    const waarde = (naam) => form.elements[naam].value.trim().replace(/\s+/g, " ");
+    const naam = waarde("naam");
+    const eigen = nieuw ? null : currentId;
+    const slug = nieuw ? slugId(naam) : eigen;
+
+    if (!naam) return fieldError(form, form.elements.naam, B.foutNaam);
+    if (!slug) return fieldError(form, form.elements.naam, B.foutLetters);
+    const bestaat = (lijst) =>
+      lijst.some((s) => s.id !== eigen && (s.id === slugId(naam) || s.naam.toLowerCase() === naam.toLowerCase()));
+    if (bestaat(data.stakeholders)) return fieldError(form, form.elements.naam, B.foutStakeholderBestaat);
+
+    const velden = {
+      naam,
+      toelichting: waarde("toelichting"),
+      kwadrant: form.elements.kwadrant.value,
+      invloed: form.elements.invloed.value,
+      belang: form.elements.belang.value,
+      status: form.elements.status.value,
+      informatiebehoefte: waarde("informatiebehoefte"),
+      afstemmen: waarde("afstemmen")
+    };
+    const hologram = form.elements.hologram.value;
+    const planVelden = {};
+    for (const kolom of data.plan.kolommen) {
+      const tekst = waarde("plan-" + kolom.id);
+      if (tekst) planVelden[kolom.id] = tekst;
+    }
+
+    showFormError(form, "");
+    setBusy(form, true, B.bezig);
+    try {
+      const volgende = await updateFile(
+        FILES.stakeholders,
+        (huidige) => {
+          const lijst = huidige.stakeholders || [];
+          const rijen = huidige.rijen || [];
+          if (bestaat(lijst)) throw coded("foutStakeholderBestaat");
+          const oud = nieuw ? null : lijst.find((s) => s.id === slug);
+          if (!nieuw && !oud) throw coded("foutStakeholderWeg");
+
+          let rijId = oud && oud.plan ? oud.plan : slug;
+          if (nieuw) while (rijen.some((r) => r.id === rijId)) rijId += "-2";
+          const gedeeld = lijst.some((s) => s.id !== slug && s.plan === rijId);
+          const oudeRij = rijen.find((r) => r.id === rijId);
+
+          const rij = Object.assign({}, oudeRij, { id: rijId, stakeholder: gedeeld && oudeRij ? oudeRij.stakeholder : naam });
+          for (const kolom of data.plan.kolommen) {
+            if (planVelden[kolom.id]) rij[kolom.id] = planVelden[kolom.id];
+            else delete rij[kolom.id];
+          }
+          if (Object.keys(planVelden).length) delete rij.open;
+          else rij.open = true;
+
+          const entry = Object.assign({}, oud, { id: slug }, velden, { plan: rijId });
+          if (hologram) entry.hologram = hologram;
+          else delete entry.hologram;
+
+          return Object.assign({}, huidige, {
+            stakeholders: nieuw ? lijst.concat(entry) : lijst.map((s) => (s.id === slug ? entry : s)),
+            rijen: oudeRij ? rijen.map((r) => (r.id === rijId ? rij : r)) : rijen.concat(rij)
+          });
+        },
+        nieuw ? "Stakeholder toegevoegd: " + naam : "Stakeholder aangepast: " + naam
+      );
+      setStakeholders(volgende);
+    } catch (error) {
+      setBusy(form, false);
+      showFormError(form, errorMessage(error));
+      return;
+    }
+
+    if (nieuw) {
+      stakeNieuw = false;
+      stakeToolsStatus = fill(B.toegevoegd, { naam });
+      renderStakeholders();
+      renderStakeTools();
+      const knop = map.querySelector('.node[data-id="' + slug + '"]');
+      if (knop) {
+        knop.scrollIntoView({ block: "center" });
+        knop.focus({ preventScroll: true });
+      }
+    } else {
+      stakeEdit = false;
+      stakeStatus = B.opgeslagen;
+      renderStakeholders();
+      detailNaam.focus({ preventScroll: true });
+    }
+  }
+
+  /* Een stakeholder verwijderen: zijn documenten, zijn plek bij de planeten, en als laatste hijzelf met zijn rij in het plan. */
+  async function deleteStakeholder(knop) {
+    const stakeholder = currentId && stakeholderById.get(currentId);
+    if (!stakeholder) return;
+    const id = stakeholder.id;
+    const box = knop.closest(".doc__confirm");
+    setBusy(box, true, B.bezig);
+    try {
+      await removeDocumentsWhere((d) => d.stakeholder === id, "Documenten van " + stakeholder.naam + " verwijderd");
+      setPlaneten(
+        await updateFile(
+          FILES.planeten,
+          (lijst) =>
+            lijst.map((o) =>
+              Array.isArray(o.stakeholders) && o.stakeholders.includes(id)
+                ? Object.assign({}, o, { stakeholders: o.stakeholders.filter((x) => x !== id) })
+                : o
+            ),
+          "Planeten bijgewerkt: " + stakeholder.naam + " verwijderd"
+        )
+      );
+      const volgende = await updateFile(
+        FILES.stakeholders,
+        (huidige) => {
+          const rest = (huidige.stakeholders || []).filter((s) => s.id !== id);
+          const rijen = huidige.rijen || [];
+          return Object.assign({}, huidige, {
+            stakeholders: rest,
+            rijen: rest.some((s) => s.plan === stakeholder.plan) ? rijen : rijen.filter((r) => r.id !== stakeholder.plan)
+          });
+        },
+        "Stakeholder verwijderd: " + stakeholder.naam
+      );
+      setStakeholders(volgende);
+    } catch (error) {
+      setBusy(box, false);
+      showFormError(box, errorMessage(error));
+      return;
+    }
+    stakeConfirm = false;
+    stakeToolsStatus = fill(B.verwijderd, { naam: stakeholder.naam });
+    renderStakeholders();
+    renderStakeTools();
+    const toevoegen = stakeTools && stakeTools.querySelector('[data-act="stake-nieuw"]');
+    if (toevoegen) toevoegen.focus();
+  }
+
+  /* ---------- Acties ---------- */
+
+  const actieVolgorde = (a, b) =>
+    Number(Boolean(a.klaar)) - Number(Boolean(b.klaar)) || String(a.datum || "").localeCompare(String(b.datum || ""));
+
+  function actieFormEl(actie) {
+    const nieuw = !actie;
+    const prefix = "actie-" + (nieuw ? "nieuw" : actie.id);
+    const namen = teamleden.map((lid) => lid.naam);
+    if (actie && actie.eigenaar && !namen.includes(actie.eigenaar)) namen.push(actie.eigenaar);
+    const week = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const twee = (waarde) => String(waarde).padStart(2, "0");
+    const standaard = week.getFullYear() + "-" + twee(week.getMonth() + 1) + "-" + twee(week.getDate());
+
+    return el(
+      "form",
+      { class: "planeetform actieform", id: prefix + "-form", novalidate: true, dataset: { modus: nieuw ? "nieuw" : "aanpassen" } },
+      el(
+        "div",
+        { class: "field" },
+        el("label", { for: prefix + "-tekst", text: A.veldTekst }),
+        el("textarea", { id: prefix + "-tekst", name: "tekst", rows: "2", maxlength: "200" }, nieuw ? "" : actie.tekst)
+      ),
+      keuzeVeld(prefix, "eigenaar", A.veldEigenaar, [["", "Kies een naam"]].concat(namen.map((naam) => [naam, naam])), nieuw ? "" : actie.eigenaar),
+      el(
+        "div",
+        { class: "field" },
+        el("label", { for: prefix + "-datum", text: A.veldDatum }),
+        el("input", { id: prefix + "-datum", name: "datum", type: "date", value: nieuw ? standaard : actie.datum || standaard })
+      ),
+      el("p", { class: "formerror", role: "alert", hidden: true }),
+      el(
+        "div",
+        { class: "actions" },
+        el("button", { class: "btn btn--primary", type: "submit", text: nieuw ? A.toevoegen : A.opslaan }),
+        el("button", { class: "btn", type: "button", dataset: { act: "actie-annuleer" }, text: A.annuleren })
+      )
+    );
+  }
+
+  function actieItem(actie) {
+    const klaar = Boolean(actie.klaar);
+    const li = el("li", { class: "actie" + (klaar ? " is-klaar" : ""), dataset: { id: actie.id } });
+    if (team && actieForm === actie.id) {
+      li.append(actieFormEl(actie));
+      return li;
+    }
+    const vink = team
+      ? el(
+          "button",
+          {
+            class: "actie__vink",
+            type: "button",
+            "aria-pressed": String(klaar),
+            "aria-label": fill(A.afvinken, { tekst: actie.tekst }),
+            dataset: { act: "actie-vink", id: actie.id }
+          },
+          icon(klaar ? "check" : "todo")
+        )
+      : el("span", { class: "actie__vink actie__vink--stil", "aria-hidden": "true" }, icon(klaar ? "check" : "todo"));
+
+    li.append(
+      vink,
+      el(
+        "div",
+        { class: "actie__inhoud" },
+        el("p", { class: "actie__tekst", text: actie.tekst }),
+        el(
+          "p",
+          { class: "actie__meta" },
+          el("span", { text: A.eigenaar + ": " + actie.eigenaar }),
+          actie.datum && el("span", { text: A.datum + " " + formatDate(actie.datum) }),
+          klaar && el("span", { class: "actie__klaar", text: A.afgerond })
+        )
+      )
+    );
+
+    if (team && actieConfirm === actie.id) {
+      li.append(
+        el(
+          "div",
+          { class: "doc__confirm" },
+          el("span", { text: A.zeker }),
+          el("button", { class: "btn btn--danger", type: "button", dataset: { act: "actie-ja", id: actie.id }, text: A.ja }),
+          el("button", { class: "btn", type: "button", dataset: { act: "actie-nee" }, text: A.annuleren }),
+          el("p", { class: "formerror", role: "alert", hidden: true })
+        )
+      );
+    } else if (team) {
+      li.append(
+        el(
+          "div",
+          { class: "actie__beheer" },
+          el(
+            "button",
+            { class: "iconbtn iconbtn--small", type: "button", "aria-label": fill(A.aanpassenLabel, { tekst: actie.tekst }), dataset: { act: "actie-bewerk", id: actie.id } },
+            icon("edit")
+          ),
+          el(
+            "button",
+            { class: "iconbtn iconbtn--small", type: "button", "aria-label": fill(A.verwijderLabel, { tekst: actie.tekst }), dataset: { act: "actie-vraag", id: actie.id } },
+            icon("trash")
+          )
+        )
+      );
+    }
+    return li;
+  }
+
+  function renderActies() {
+    if (!actieSectie) return;
+    const delen = [el("h2", { id: "acties-titel", text: A.titel }), el("p", { class: "acties__intro", text: A.intro })];
+    if (actieStatus) delen.push(el("p", { class: "docs__status", role: "status", text: actieStatus }));
+    delen.push(
+      acties.length
+        ? el("ul", { class: "acties__lijst" }, acties.slice().sort(actieVolgorde).map(actieItem))
+        : el("p", { class: "docs__leeg", text: A.leeg })
+    );
+    if (team) {
+      if (actieForm === "nieuw") delen.push(el("h3", { text: A.toevoegen }), actieFormEl(null));
+      else delen.push(el("button", { class: "btn", type: "button", dataset: { act: "actie-nieuw" } }, icon("plus"), el("span", { text: A.toevoegen })));
+    }
+    actieSectie.replaceChildren(...delen);
+  }
+
+  /* De acties staan onder de kaart; in de editor staat daarboven de plek om een stakeholder toe te voegen. */
+  function renderActiesSectie() {
+    actieSectie = el("section", { class: "acties", id: "acties", "aria-labelledby": "acties-titel" });
+    byId("weergave-kaart").append(...(stakeTools ? [stakeTools] : []), actieSectie);
+
+    const focusIn = (selector) => {
+      const doel = actieSectie.querySelector(selector);
+      if (doel) doel.focus();
+    };
+
+    actieSectie.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-act]");
+      if (!target) return;
+      const act = target.dataset.act;
+      const id = target.dataset.id;
+      if (act === "actie-nieuw") {
+        actieForm = "nieuw";
+        actieConfirm = null;
+        actieStatus = "";
+        renderActies();
+        focusIn(".actieform textarea");
+      } else if (act === "actie-bewerk") {
+        actieForm = id;
+        actieConfirm = null;
+        actieStatus = "";
+        renderActies();
+        focusIn(".actieform textarea");
+      } else if (act === "actie-annuleer") {
+        const was = actieForm;
+        actieForm = null;
+        renderActies();
+        focusIn(was === "nieuw" ? '[data-act="actie-nieuw"]' : '[data-act="actie-bewerk"][data-id="' + was + '"]');
+      } else if (act === "actie-vraag") {
+        actieConfirm = id;
+        actieForm = null;
+        actieStatus = "";
+        renderActies();
+        focusIn(".doc__confirm .btn--danger");
+      } else if (act === "actie-nee") {
+        const was = actieConfirm;
+        actieConfirm = null;
+        renderActies();
+        focusIn('[data-act="actie-vraag"][data-id="' + was + '"]');
+      } else if (act === "actie-ja") {
+        deleteActie(id, target);
+      } else if (act === "actie-vink") {
+        toggleActie(id);
+      }
+    });
+
+    actieSectie.addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveActie(event.target);
+    });
+
+    renderActies();
+    renderStakeTools();
+  }
+
+  async function saveActie(form) {
+    const nieuw = form.dataset.modus === "nieuw";
+    const id = actieForm;
+    const tekst = form.elements.tekst.value.trim().replace(/\s+/g, " ");
+    const eigenaar = form.elements.eigenaar.value;
+    const datum = form.elements.datum.value;
+    if (!tekst) return fieldError(form, form.elements.tekst, A.foutTekst);
+    if (!eigenaar) return fieldError(form, form.elements.eigenaar, A.foutEigenaar);
+    if (!datum) return fieldError(form, form.elements.datum, A.foutDatum);
+
+    showFormError(form, "");
+    setBusy(form, true, A.bezig);
+    try {
+      const volgende = await updateFile(
+        FILES.stakeholders,
+        (huidige) => {
+          const lijst = huidige.acties || [];
+          if (nieuw) return Object.assign({}, huidige, { acties: lijst.concat({ id: uid(), tekst, eigenaar, datum, klaar: false }) });
+          if (!lijst.some((a) => a.id === id)) throw coded("foutActieWeg");
+          return Object.assign({}, huidige, { acties: lijst.map((a) => (a.id === id ? Object.assign({}, a, { tekst, eigenaar, datum }) : a)) });
+        },
+        nieuw ? "Actie toegevoegd: " + tekst : "Actie aangepast: " + tekst
+      );
+      setStakeholders(volgende);
+    } catch (error) {
+      setBusy(form, false);
+      showFormError(form, errorMessage(error));
+      return;
+    }
+    actieForm = null;
+    actieStatus = nieuw ? A.toegevoegd : A.opgeslagen;
+    renderActies();
+    const knop = actieSectie.querySelector(nieuw ? '[data-act="actie-nieuw"]' : '[data-act="actie-bewerk"][data-id="' + id + '"]');
+    if (knop) knop.focus();
+  }
+
+  async function toggleActie(id) {
+    const actie = acties.find((a) => a.id === id);
+    if (!actie) return;
+    try {
+      const volgende = await updateFile(
+        FILES.stakeholders,
+        (huidige) => {
+          const lijst = huidige.acties || [];
+          if (!lijst.some((a) => a.id === id)) throw coded("foutActieWeg");
+          return Object.assign({}, huidige, { acties: lijst.map((a) => (a.id === id ? Object.assign({}, a, { klaar: !a.klaar }) : a)) });
+        },
+        "Actie bijgewerkt: " + actie.tekst
+      );
+      setStakeholders(volgende);
+      actieStatus = "";
+    } catch (error) {
+      actieStatus = errorMessage(error);
+    }
+    renderActies();
+    const knop = actieSectie.querySelector('[data-act="actie-vink"][data-id="' + id + '"]');
+    if (knop) knop.focus();
+  }
+
+  async function deleteActie(id, knop) {
+    const actie = acties.find((a) => a.id === id);
+    if (!actie) return;
+    const box = knop.closest(".doc__confirm");
+    setBusy(box, true, A.bezig);
+    try {
+      const volgende = await updateFile(
+        FILES.stakeholders,
+        (huidige) => Object.assign({}, huidige, { acties: (huidige.acties || []).filter((a) => a.id !== id) }),
+        "Actie verwijderd: " + actie.tekst
+      );
+      setStakeholders(volgende);
+    } catch (error) {
+      setBusy(box, false);
+      showFormError(box, errorMessage(error));
+      return;
+    }
+    actieConfirm = null;
+    actieStatus = A.verwijderd;
+    renderActies();
+    const nieuwKnop = actieSectie.querySelector('[data-act="actie-nieuw"]');
+    if (nieuwKnop) nieuwKnop.focus();
   }
 
   /* ---------- Voortgang: sterrenkaart met planeten ---------- */
@@ -2843,7 +3551,8 @@
   }
 
   function errorMessage(error) {
-    if (error && error.code && (TT[error.code] || V[error.code])) return TT[error.code] || V[error.code];
+    const tekstVoor = (code) => TT[code] || V[code] || B[code] || A[code];
+    if (error && error.code && tekstVoor(error.code)) return tekstVoor(error.code);
     const status = error && error.status;
     if (status === 401) return TT.foutSleutel;
     if (status === 403) return TT.foutRechten;
@@ -3051,7 +3760,7 @@
     toegang = null;
   }
 
-  /* De drie gegevensbestanden die de pagina in de repository bijhoudt. */
+  /* De vier gegevensbestanden die de pagina in de repository bijhoudt. */
   const FILE_NOTE =
     "  De pagina werkt dit bestand zelf bij wanneer een teamlid in de editor iets\n" +
     "  wijzigt. Met de hand aanpassen kan ook; houd dan de dubbele aanhalingstekens\n" +
@@ -3077,6 +3786,25 @@
       leeg: () => [],
       geldig: (value) => Array.isArray(value),
       kop: "/*\n  Documenten per stakeholder.\n\n" + FILE_NOTE + "*/\n"
+    },
+    stakeholders: {
+      naam: "stakeholders.js",
+      variabele: "STAKEHOLDERMAP_STAKEHOLDERS",
+      /* Bestaat het bestand nog niet in de repository, begin dan met wat nu op de pagina staat. */
+      leeg: () => JSON.parse(JSON.stringify(stakeholderState())),
+      geldig: (value) =>
+        Boolean(value) &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        Array.isArray(value.stakeholders) &&
+        Array.isArray(value.rijen) &&
+        Array.isArray(value.acties),
+      kop:
+        "/*\n  Stakeholders, plan van aanpak en acties van de stakeholdermap.\n\n" +
+        FILE_NOTE +
+        '\n  Bij elke stakeholder staat "invloed" en "belang" (laag, gemiddeld of hoog), de plek op de kaart\n' +
+        '  ("kwadrant", een id uit data.js) en de "status": "nu" (nu actief) of "later" (later, nog niet benaderd).\n' +
+        '  Het veld "plan" verwijst naar een rij bij "rijen". Een actie heeft een tekst, een eigenaar en een datum.\n*/\n'
     },
     voortgang: {
       naam: "voortgang.js",
@@ -3279,14 +4007,20 @@
   async function refreshFromRepo() {
     if (!team) return;
     try {
-      const [docs, stappen, planeten] = await Promise.all([
+      const [docs, stappen, planeten, mensen] = await Promise.all([
         fetchFile(FILES.documenten),
         fetchFile(FILES.voortgang),
-        fetchFile(FILES.planeten)
+        fetchFile(FILES.planeten),
+        fetchFile(FILES.stakeholders)
       ]);
       documenten = docs.value;
       voortgang = stappen.value;
       setPlaneten(planeten.value);
+      /* Alleen opnieuw tekenen als er echt iets anders staat, zodat een open formulier blijft staan. */
+      if (JSON.stringify(mensen.value) !== JSON.stringify(stakeholderState())) {
+        setStakeholders(mensen.value);
+        renderStakeholders();
+      }
       renderDocuments();
       renderVoortgang();
       /* Wijst de link naar een planeet of maan die alleen in de repository staat, dan opent hij nu. */
@@ -3326,6 +4060,9 @@
 
     galaxyTools = el("div", { class: "galaxytools", id: "galaxytools", hidden: true });
     galaxy.after(galaxyTools);
+
+    stakeTools = el("div", { class: "galaxytools", id: "stakeholdertools", hidden: true });
+    bindStakeForms(stakeTools);
   }
 
   function renderTeamState() {
@@ -3337,6 +4074,9 @@
       editorTekst.textContent = team ? fill(TT.balkAan, { naam }) : TT.balkUit;
     }
     renderDocuments();
+    renderDetailBeheer();
+    renderStakeTools();
+    renderActies();
     renderVoortgang();
   }
 
@@ -3752,6 +4492,7 @@
   renderMasthead();
   if (!EDITOR) buildEditorLink();
   renderTabs();
+  renderActiesSectie();
   renderMap();
   renderPlan();
   renderGalaxy();
