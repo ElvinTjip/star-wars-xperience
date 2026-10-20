@@ -59,5 +59,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-20",
     "door": "ElvinTjip",
     "pad": "documenten/concepten/mvgv0cl8gics5/holomap.zip"
+  },
+  {
+    "id": "mvgvl2pr5963p",
+    "maan": "concepten/mv75dqad3zr0e",
+    "titel": "KARTEN_V1",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-20",
+    "door": "info@coengeldof.nl",
+    "pad": "documenten/concepten/mv75dqad3zr0e/karten-1econcept.pdf"
   }
 ];
