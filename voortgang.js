@@ -136,6 +136,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
           "coen"
         ],
         "bezig": true
+      },
+      {
+        "id": "mvgv0cl8gics5",
+        "titel": "Holomap",
+        "klaar": false,
+        "beeld": "cato-neimoidia"
       }
     ]
   },
