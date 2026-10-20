@@ -50,5 +50,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-13",
     "door": "info@coengeldof.nl",
     "pad": "documenten/concepten/mv72iibpa8ssp/1e-iteratie-concept.pdf"
+  },
+  {
+    "id": "mvgv1eb6jblqk",
+    "maan": "concepten/mvgv0cl8gics5",
+    "titel": "Holomap",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-20",
+    "door": "ElvinTjip",
+    "pad": "documenten/concepten/mvgv0cl8gics5/holomap.zip"
   }
 ];
