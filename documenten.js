@@ -68,5 +68,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-20",
     "door": "info@coengeldof.nl",
     "pad": "documenten/concepten/mv75dqad3zr0e/karten-1econcept.pdf"
+  },
+  {
+    "id": "mvgvm0a12d8uz",
+    "maan": "concepten/mv75dqad3zr0e",
+    "titel": "KARTEN_PODRACEGAME_V1",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-20",
+    "door": "info@coengeldof.nl",
+    "pad": "documenten/concepten/mv75dqad3zr0e/gemini-code-1791928694309.html"
   }
 ];
