@@ -140,7 +140,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "mvgv0cl8gics5",
         "titel": "Holomap",
-        "klaar": false,
+        "klaar": true,
         "beeld": "cato-neimoidia",
         "mensen": [
           "coen"
