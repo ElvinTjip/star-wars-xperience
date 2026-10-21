@@ -83,8 +83,11 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "mv3xkziej7hgt",
         "titel": "Tussentijdse Pitch",
-        "klaar": false,
-        "beeld": "alderaan"
+        "klaar": true,
+        "beeld": "alderaan",
+        "mensen": [
+          "elvin"
+        ]
       },
       {
         "id": "mv3xl7rwp1yu5",
