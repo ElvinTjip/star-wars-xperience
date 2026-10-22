@@ -95,13 +95,14 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "mvhtnvws0hpjz",
         "titel": "Creative debriefing pitch",
-        "klaar": true,
+        "klaar": false,
         "beeld": "corellia",
         "mensen": [
           "elvin",
           "stan",
           "coen"
-        ]
+        ],
+        "bezig": true
       }
     ]
   },
