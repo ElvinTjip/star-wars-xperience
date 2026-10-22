@@ -2,7 +2,7 @@
 
 ## Wat is er veranderd ten opzichte van versie 1
 - Het plein wordt getoond met de echte Holomap van het team, met per onderdeel een groot beeld en de Holomap als venster rechtsonder (het gekozen gebouw licht op).
-- Nieuwe zin over generaties: "Elke generatie is opgegroeid met een eigen Star Wars. Bij ons zie je ze allemaal."
+- Nieuwe zin over generaties: "Elke generatie is opgegroeid met een eigen Star Wars. Bij ons zie je ze allemaal." De kaarten tonen waar elke generatie mee opgroeide (originele films, prequels, The Clone Wars, Disney+), niet het meest bekeken; de Nielsen-bron is daarom weggehaald.
 - Droid shop en restaurants met echte foto's van Galaxy's Edge (aangeleverd door het team), gemarkeerd als "ECHT: GALAXY'S EDGE".
 - Winkels, museum, muziek, film, live show, immersive zaal, Sith-tempel, space heist en Younglings met conceptbeelden uit Artlist, gemarkeerd als "CONCEPTBEELD (AI)".
 - Het kartspel is opnieuw opgenomen met de ingebouwde computerbesturing, zodat de kart op de baan blijft.
@@ -21,7 +21,7 @@ Geen echte namen. `video/lasergame-opname.mp4` (echte mensen) wordt niet gebruik
 | # | Tijd | Beeld | Tekst | Muziek |
 |---|---|---|---|---|
 | 1 Opening | 0,0 tot 5,0 | Deuren van de route open, Tatooine | NA DE VASTE ROUTE / De deuren gaan open. TATOOINE / Een open plein. Jij kiest wat je doet. | Drone, Cantina Band vanaf 1,9 |
-| 2 Generaties | 5,0 tot 11,5 | Drie kaarten | Elke generatie is opgegroeid met een eigen Star Wars. Andor, The Clone Wars, The Mandalorian. Bij ons zie je ze allemaal. | Cantina Band |
+| 2 Generaties | 5,0 tot 11,5 | Vier kaarten | VAN JONG TOT OUD / Elke generatie is opgegroeid met een eigen Star Wars. Gen X: de originele films. Millennials: de prequels. Gen Z: The Clone Wars. Gen Alpha: Disney+. Bij ons zie je ze allemaal. | Cantina Band |
 | 3 Holomap | 11,5 tot 14,5 | Draaiende Holomap van het plein | Beide paden komen hier samen. | Cantina Band |
 | 4 Het plein | 14,5 tot 36,7 | Per onderdeel een groot beeld, Holomap rechtsonder | Winkels, Droid shop, Restaurants, Museum, Muziek, Filmzaal, Live show, Immersive zaal | Cantina Band, eindigt met een bandstop |
 | 5 Overgang | 36,7 tot 39,7 | Missiekeuze | SPECIALE MISSIES / Star Wars is meer dan Jedi of Sith. | Klap, drone, riser |
