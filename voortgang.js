@@ -98,7 +98,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "klaar": true,
         "beeld": "corellia",
         "mensen": [
-          "elvin"
+          "elvin",
+          "stan"
         ]
       }
     ]
