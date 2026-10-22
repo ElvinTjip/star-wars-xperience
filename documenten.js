@@ -86,5 +86,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-21",
     "door": "ElvinTjip",
     "pad": "documenten/concepten/mv75cj8gm4g83/concept-immersive-klimmen-de-training-op-dagobah.pdf"
+  },
+  {
+    "id": "mvjj92yc40da8",
+    "maan": "concepten/mv75d4xt8ge98",
+    "titel": "Laser Gamen",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-22",
+    "door": "Stan",
+    "pad": "documenten/concepten/mv75d4xt8ge98/lasergame-concept-star-wars.pdf"
   }
 ];
