@@ -99,7 +99,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "beeld": "corellia",
         "mensen": [
           "elvin",
-          "stan"
+          "stan",
+          "coen"
         ]
       }
     ]
