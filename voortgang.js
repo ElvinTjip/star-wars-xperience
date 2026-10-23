@@ -155,6 +155,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "mensen": [
           "coen"
         ]
+      },
+      {
+        "id": "mvl2f3h2rmumo",
+        "titel": "10 PAGER V1",
+        "klaar": false,
+        "beeld": "kashyyyk"
       }
     ]
   },
