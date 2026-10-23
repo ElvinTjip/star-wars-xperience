@@ -95,5 +95,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-22",
     "door": "Stan",
     "pad": "documenten/concepten/mv75d4xt8ge98/lasergame-concept-star-wars.pdf"
+  },
+  {
+    "id": "mvl2fev4j2jee",
+    "maan": "concepten/mvl2f3h2rmumo",
+    "titel": "10PAGER",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-23",
+    "door": "info@coengeldof.nl",
+    "pad": "documenten/concepten/mvl2f3h2rmumo/star-wars-xperience-10-pager-v3-staand.pdf"
   }
 ];
