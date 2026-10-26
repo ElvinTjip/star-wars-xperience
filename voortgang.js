@@ -163,6 +163,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "mensen": [
           "coen"
         ]
+      },
+      {
+        "id": "mvpuspz11uiuj",
+        "titel": "tattoine document",
+        "klaar": false,
+        "beeld": "dathomir"
       }
     ]
   },
