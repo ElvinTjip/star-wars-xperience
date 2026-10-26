@@ -113,5 +113,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-26",
     "door": "ElvinTjip",
     "url": "https://claude.ai/artifact/NiQpdTK8C7a3Zk57aXGktC#slide-4cf8914340b2"
+  },
+  {
+    "id": "mvputcplcqpc5",
+    "maan": "concepten/mvpuspz11uiuj",
+    "titel": "tatooine document",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-26",
+    "door": "ElvinTjip",
+    "pad": "documenten/concepten/mvpuspz11uiuj/tatooine-document.pdf"
   }
 ];
