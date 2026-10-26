@@ -104,5 +104,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-23",
     "door": "info@coengeldof.nl",
     "pad": "documenten/concepten/mvl2f3h2rmumo/star-wars-xperience-10-pager-v3-staand.pdf"
+  },
+  {
+    "id": "mvpuqnm3ts47k",
+    "maan": "pitch/mvhtnvws0hpjz",
+    "titel": "Creative debriefing pitch",
+    "soort": "bestand",
+    "toegevoegd": "2026-10-26",
+    "door": "ElvinTjip",
+    "pad": "documenten/pitch/mvhtnvws0hpjz/star-wars-xperience-creative-debriefing.pdf"
   }
 ];
