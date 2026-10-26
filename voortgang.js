@@ -167,7 +167,7 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "mvpuspz11uiuj",
         "titel": "tattoine document",
-        "klaar": true,
+        "klaar": false,
         "beeld": "dathomir",
         "mensen": [
           "elvin"
