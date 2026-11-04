@@ -172,6 +172,16 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "mensen": [
           "elvin"
         ]
+      },
+      {
+        "id": "mw0vm3ei573jp",
+        "titel": "Light side en dark side",
+        "klaar": false,
+        "beeld": "coruscant",
+        "mensen": [
+          "elvin"
+        ],
+        "bezig": true
       }
     ]
   },
