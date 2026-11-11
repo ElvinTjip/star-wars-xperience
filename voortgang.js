@@ -176,8 +176,11 @@ window.STAKEHOLDERMAP_VOORTGANG = {
       {
         "id": "mwbvlf5emyy0l",
         "titel": "Twee paden concept",
-        "klaar": false,
-        "beeld": "ryloth"
+        "klaar": true,
+        "beeld": "ryloth",
+        "mensen": [
+          "elvin"
+        ]
       }
     ]
   },
