@@ -122,5 +122,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-10-26",
     "door": "ElvinTjip",
     "pad": "documenten/concepten/mvpuspz11uiuj/tatooine-document.pdf"
+  },
+  {
+    "id": "mwbvm9guuoivg",
+    "maan": "concepten/mwbvlf5emyy0l",
+    "titel": "Concept document",
+    "soort": "bestand",
+    "toegevoegd": "2026-11-11",
+    "door": "ElvinTjip",
+    "pad": "documenten/concepten/mwbvlf5emyy0l/twee-kanten-van-de-force.mp4"
   }
 ];
