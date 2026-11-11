@@ -131,5 +131,14 @@ window.STAKEHOLDERMAP_DOCUMENTEN = [
     "toegevoegd": "2026-11-11",
     "door": "ElvinTjip",
     "pad": "documenten/concepten/mwbvlf5emyy0l/light-side-en-dark-side.pdf"
+  },
+  {
+    "id": "mwbvnk8f5mji0",
+    "maan": "concepten/mwbvlf5emyy0l",
+    "titel": "Concept video",
+    "soort": "bestand",
+    "toegevoegd": "2026-11-11",
+    "door": "ElvinTjip",
+    "pad": "documenten/concepten/mwbvlf5emyy0l/twee-kanten-van-de-force.mp4"
   }
 ];
