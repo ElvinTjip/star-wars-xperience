@@ -181,6 +181,12 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "mensen": [
           "elvin"
         ]
+      },
+      {
+        "id": "mwrmogqoio7qz",
+        "titel": "Tattooine Renders V1",
+        "klaar": false,
+        "beeld": "dagobah"
       }
     ]
   },
