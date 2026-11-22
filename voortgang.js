@@ -189,7 +189,8 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "beeld": "dagobah",
         "mensen": [
           "coen"
-        ]
+        ],
+        "bezig": true
       }
     ]
   },
