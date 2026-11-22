@@ -186,7 +186,10 @@ window.STAKEHOLDERMAP_VOORTGANG = {
         "id": "mwrmogqoio7qz",
         "titel": "Tattooine Renders V1",
         "klaar": false,
-        "beeld": "dagobah"
+        "beeld": "dagobah",
+        "mensen": [
+          "coen"
+        ]
       }
     ]
   },
